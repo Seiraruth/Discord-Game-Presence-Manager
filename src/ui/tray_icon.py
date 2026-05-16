@@ -201,7 +201,17 @@ class SystemTrayIcon(QSystemTrayIcon):
             dlg.set_add_game_callback(self.process_quest_input)
             dlg.exec_()
             
+        def on_update_list_opened():
+            self.showMessage("Info", "Actualizando lista de juegos de Discord...", QSystemTrayIcon.Information, 4000)
+            QApplication.processEvents()
+            apps = self.pm._fetch_discord_apps_cached(force_download=True)
+            if apps:
+                self.showMessage("Info", f"Lista de juegos actualizada exitosamente ({len(apps)} apps).", QSystemTrayIcon.Information, 3000)
+            else:
+                self.showMessage("Error", "No se pudo actualizar la lista de juegos de Discord.", QSystemTrayIcon.Warning, 4000)
+
         dialog.quest_mode_requested.connect(on_quest_opened)
+        dialog.update_list_requested.connect(on_update_list_opened)
 
         if dialog.exec_() == QDialog.Accepted:
             game_name = dialog.get_game_name()
@@ -235,17 +245,20 @@ class SystemTrayIcon(QSystemTrayIcon):
         options = options[:50]
 
         if not options:
-            self.showMessage("Buscando...", f"No encontrado en caché. Descargando datos recientes para '{game_name}'...", QSystemTrayIcon.Information, 4000)
-            QApplication.processEvents() 
-            self.pm._fetch_discord_apps_cached(force_download=True)
-            
-            discord_options2 = self.pm._find_discord_matches(game_name, max_candidates=50)
-            for d_opt in discord_options2:
-                if not any(o["name"].lower() == d_opt["name"].lower() for o in options):
-                    options.append(d_opt)
-            
-            options.sort(key=lambda x: x.get("score", 0), reverse=True)
-            options = options[:50]
+            status = self.pm.check_discord_cache_status()
+            if status["status"] == "MISSING" or status["hours"] > 168:
+                self.showMessage("Buscando...", f"No encontrado en caché (antigua/faltante). Descargando datos recientes para '{game_name}'...", QSystemTrayIcon.Information, 4000)
+                QApplication.processEvents() 
+                apps = self.pm._fetch_discord_apps_cached(force_download=True)
+                
+                if apps:
+                    discord_options2 = self.pm._find_discord_matches(game_name, max_candidates=50)
+                    for d_opt in discord_options2:
+                        if not any(o["name"].lower() == d_opt["name"].lower() for o in options):
+                            options.append(d_opt)
+                
+                options.sort(key=lambda x: x.get("score", 0), reverse=True)
+                options = options[:50]
         
         if not options:
             self.showMessage("Info", "Sin coincidencias encontradas.", QSystemTrayIcon.Information, 3000)
@@ -290,20 +303,23 @@ class SystemTrayIcon(QSystemTrayIcon):
 
         # 2. If no matches, force download and search again
         if not options:
-            self.showMessage("Buscando...", f"No encontrado en caché. Descargando datos recientes de Discord para '{game_name}'...", QSystemTrayIcon.Information, 4000)
-            QApplication.processEvents() # Keep UI responsive (mostly)
-            
-            # Update cache
-            self.pm._fetch_discord_apps_cached(force_download=True)
-            
-            # Search again
-            discord_options2 = self.pm._find_discord_matches(game_name, max_candidates=50)
-            for d_opt in discord_options2:
-                if not any(o["name"].lower() == d_opt["name"].lower() for o in options):
-                    options.append(d_opt)
-            
-            options.sort(key=lambda x: x.get("score", 0), reverse=True)
-            options = options[:50]
+            status = self.pm.check_discord_cache_status()
+            if status["status"] == "MISSING" or status["hours"] > 168:
+                self.showMessage("Buscando...", f"No encontrado en caché (antigua/faltante). Descargando datos recientes de Discord para '{game_name}'...", QSystemTrayIcon.Information, 4000)
+                QApplication.processEvents() # Keep UI responsive (mostly)
+                
+                # Update cache
+                apps = self.pm._fetch_discord_apps_cached(force_download=True)
+                
+                # Search again
+                if apps:
+                    discord_options2 = self.pm._find_discord_matches(game_name, max_candidates=50)
+                    for d_opt in discord_options2:
+                        if not any(o["name"].lower() == d_opt["name"].lower() for o in options):
+                            options.append(d_opt)
+                
+                options.sort(key=lambda x: x.get("score", 0), reverse=True)
+                options = options[:50]
 
         # Note: We don't apply automatically here loop; we show selection dialog
 
@@ -409,6 +425,7 @@ class SystemTrayIcon(QSystemTrayIcon):
         if current == -1 and total == -1:
             if getattr(self, '_download_progress_dlg', None):
                 self._download_progress_dlg.close()
+                self._download_progress_dlg.deleteLater()
                 self._download_progress_dlg = None
             return
 
@@ -416,10 +433,10 @@ class SystemTrayIcon(QSystemTrayIcon):
             self._download_progress_dlg = QProgressDialog("Descargando lista de juegos...", "Cancelar", 0, total if total > 0 else 0, None)
             self._download_progress_dlg.setStyleSheet(GAMING_STYLESHEET)
             self._download_progress_dlg.setWindowModality(Qt.WindowModal)
-            self._download_progress_dlg.setMinimumDuration(0)
+            self._download_progress_dlg.setMinimumDuration(1500) # Solo mostrar si la descarga toma mas de 1.5s
             self._download_progress_dlg.setAutoReset(False)
             self._download_progress_dlg.setAutoClose(False)
-            self._download_progress_dlg.show()
+            # No forzamos show() para evitar ventanas blancas parpadeantes en descargas rípidas
             
         if getattr(self, '_download_progress_dlg', None):
             if total > 0:
@@ -437,6 +454,7 @@ class SystemTrayIcon(QSystemTrayIcon):
             
             if self._download_progress_dlg.wasCanceled():
                 self._download_progress_dlg.close()
+                self._download_progress_dlg.deleteLater()
                 self._download_progress_dlg = None
 
     def sync_games(self):

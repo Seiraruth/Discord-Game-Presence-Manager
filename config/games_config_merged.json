@@ -66453,8 +66453,9 @@
         "uuid": "ebd6864c-b2d2-41d0-b364-27c37ca747f1",
         "shortName": null,
         "appStore": null,
-        "client_id": "",
-        "executable_path": ""
+        "client_id": "1428176084574408846",
+        "executable_path": "x64/dyinglightgame_x64_rwdi.exe",
+        "steam_appid": "534380"
     },
     "EARTH DEFENSE FORCE: WORLD BROTHERS": {
         "title": "EARTH DEFENSE FORCE: WORLD BROTHERS",
@@ -70955,5 +70956,11 @@
     "John Carpenter's Toxic Commando": {
         "client_id": "1442714232331436062",
         "executable_path": "bin/pc/John Carpenter's Toxic Commando.exe"
+    },
+    "Forza Horizon 6": {
+        "name": "Forza Horizon 6",
+        "steam_appid": "2483190",
+        "image": "steam",
+        "client_id": "1445163122284429375"
     }
 }

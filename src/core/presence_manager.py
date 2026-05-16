@@ -991,7 +991,9 @@ class PresenceManager(QObject):
             # Check attempt limit
             attempts = self._match_attempt_counts.get(game_key, 0)
             if attempts >= 2:
-                logger.debug(f"🛑 Límite de intentos de match alcanzado para '{game_key}' ({attempts}).")
+                if attempts == 2:
+                    logger.debug(f"🛑 Límite de intentos de match alcanzado para '{game_key}'. No se buscará más en esta sesión.")
+                    self._match_attempt_counts[game_key] = 3 # Evitar spam en el log
                 return
 
             now = time.time()
@@ -1017,7 +1019,26 @@ class PresenceManager(QObject):
                     if not candidates:
                         logger.info(f"ℹ️ No se encontraron matches en Discord para '{game_key}'")
                         return
-                    top = candidates[0]
+                        
+                    top = candidates[0].copy()
+                    
+                    # Si el mejor match no tiene ejecutable, buscar uno con score >= 0.75 que sí tenga
+                    if not top.get("exe"):
+                        for c in candidates[1:]:
+                            if c.get("exe") and c.get("score", 0) >= 0.75:
+                                # Evitar promover un juego diferente si el primer match era casi exacto
+                                if top.get("score", 0) >= 0.98 and c.get("score", 0) < 0.98:
+                                    logger.info(f"🚫 No se promovió '{c.get('name')}' sobre '{top.get('name')}' porque el match original era exacto y el candidato no.")
+                                    continue
+                                
+                                # Promover este match como el mejor, pero con el score del original
+                                # para que no se pregunte al usuario si el nombre real era idéntico
+                                logger.info(f"♻️ Se promovió '{c.get('name')}' sobre '{top.get('name')}' por tener ejecutable.")
+                                c_copy = c.copy()
+                                c_copy["score"] = top["score"]
+                                top = c_copy
+                                break
+
                     if top.get("score", 0) >= DISCORD_AUTO_APPLY_THRESHOLD:
                         applied = self._apply_discord_match(game_key, top)
                         if applied:
@@ -1075,13 +1096,21 @@ class PresenceManager(QObject):
                 win32gui.EnumWindows(lambda h, p: p.append(h) if win32gui.IsWindowVisible(h) else None, hwnds)
                 last_title = getattr(self, "_last_window_title", None)
                 
+                # OPTIMIZATION: Get GFN PIDs once to avoid instantiating psutil.Process for every visible window
+                gef_pids = set()
+                try:
+                    for proc in psutil.process_iter(['name', 'pid']):
+                        if proc.info['name'] and proc.info['name'].lower() == "geforcenow.exe":
+                            gef_pids.add(proc.pid)
+                except Exception:
+                    pass
+
                 for hwnd in hwnds:
                     try:
                         _, pid = win32process.GetWindowThreadProcessId(hwnd)
-                        proc_name = psutil.Process(pid).name().lower()
+                        if pid not in gef_pids:
+                            continue
                     except Exception:
-                        continue
-                    if proc_name != "geforcenow.exe":
                         continue
                     title = win32gui.GetWindowText(hwnd)
                     break
@@ -1179,8 +1208,8 @@ class PresenceManager(QObject):
                             logger.info(f"✅ Steam AppID actualizado en JSON para: {game_name} -> {appid}")
                             self.games_map = games_config
                     
-                    # Check if missing client_id or executable_path
-                    if not info.get("client_id") or not info.get("executable_path"):
+                    # Check if missing client_id
+                    if not info.get("client_id"):
                         try:
                             threading.Thread(
                                 target=self._ensure_discord_match,
@@ -1286,9 +1315,9 @@ class PresenceManager(QObject):
             merged = {**defaults, **current_game}
             current_game = merged
 
-        # Check if missing data and ensure match
+        # Check if missing client_id and ensure match
         if current_game:
-            if not current_game.get("client_id") or not current_game.get("executable_path"):
+            if not current_game.get("client_id"):
                 self._ensure_discord_match(current_game["name"])
 
         if game_changed:

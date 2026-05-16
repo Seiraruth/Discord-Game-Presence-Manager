@@ -234,6 +234,7 @@ from PyQt5.QtCore import pyqtSignal
 
 class AskGameDialog(QDialog):
     quest_mode_requested = pyqtSignal()
+    update_list_requested = pyqtSignal()
 
     def __init__(self, parent=None, title=TEXTS.get("force_game", "Force Game"),
                  message=TEXTS.get("game_name", "GAME NAME:")):
@@ -241,7 +242,7 @@ class AskGameDialog(QDialog):
 
         self.setWindowTitle(title)
         self.setWindowIcon(QIcon(str(ASSETS_DIR / "geforce.ico")))
-        self.setFixedSize(420, 240) # Increased height for checkbox
+        self.setFixedSize(460, 280) # Increased size for better layout
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
 
         # ---- 🎮 ESTILO GAMING OSCURO ----
@@ -262,12 +263,24 @@ class AskGameDialog(QDialog):
         self.entry.returnPressed.connect(self.accept)
         layout.addWidget(self.entry)
 
-        # Button for Quest Mode (Multiples games)
-        self.quest_mode_btn = QPushButton(TEXTS.get("quest_mode", "Discord Quest Mode (Multiple Games)"))
+        sec_btns_layout = QVBoxLayout()
+        sec_btns_layout.setSpacing(10)
+
+        self.quest_mode_btn = QPushButton(TEXTS.get("quest_mode", "Misiones de Discord (Múltiples Juegos)"))
         self.quest_mode_btn.setObjectName("secondary")
         self.quest_mode_btn.setAutoDefault(False)
         self.quest_mode_btn.clicked.connect(self.on_quest_mode_clicked)
-        layout.addWidget(self.quest_mode_btn)
+        self.quest_mode_btn.setStyleSheet("padding: 10px; font-size: 13px;") # Make button slightly taller
+        sec_btns_layout.addWidget(self.quest_mode_btn)
+
+        self.update_list_btn = QPushButton(TEXTS.get("update_list", "Actualizar base de datos de juegos"))
+        self.update_list_btn.setObjectName("secondary")
+        self.update_list_btn.setAutoDefault(False)
+        self.update_list_btn.clicked.connect(self.on_update_list_clicked)
+        self.update_list_btn.setStyleSheet("padding: 8px; font-size: 13px;")
+        sec_btns_layout.addWidget(self.update_list_btn)
+
+        layout.addLayout(sec_btns_layout)
 
         # Botones más compactos
         btn_layout = QHBoxLayout()
@@ -289,7 +302,7 @@ class AskGameDialog(QDialog):
 
         # ---- 🎞️ ANIMATED BACKGROUND ----
         self.bg_label = QLabel(self)
-        self.gif = QMovie(str(ASSETS_DIR / "gfn2.gif"))
+        self.gif = QMovie(str(ASSETS_DIR / "gfn2.mp4"))
         self.bg_label.setMovie(self.gif)
         self.bg_label.setScaledContents(True)
         self.gif.start()
@@ -309,6 +322,9 @@ class AskGameDialog(QDialog):
 
     def on_quest_mode_clicked(self):
         self.quest_mode_requested.emit()
+
+    def on_update_list_clicked(self):
+        self.update_list_requested.emit()
 
 
 class QuestListDialog(QDialog):
