@@ -205,6 +205,7 @@ class SystemTrayIcon(QSystemTrayIcon):
                 if self._is_picker_deleted():
                     logger.debug("Detached picker cleanup skipped; Qt object already deleted")
                 else:
+                    logger.error("Unexpected RuntimeError while cleaning detached picker: %s", exc)
                     raise
             self._create_picker_window()
         self._show_and_activate_picker()
