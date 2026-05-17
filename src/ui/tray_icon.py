@@ -178,36 +178,36 @@ class SystemTrayIcon(QSystemTrayIcon):
     def _create_picker_window(self):
         self.game_picker_window = GamePickerWindow(self.pm, self.config_manager, tray_icon=self)
 
+    def _show_and_activate_picker(self):
+        self.game_picker_window.refresh_state_on_open()
+        self.game_picker_window.show()
+        self.game_picker_window.raise_()
+        self.game_picker_window.activateWindow()
+
     def open_game_picker(self):
         if self.game_picker_window is None or self._is_picker_deleted():
             self._create_picker_window()
         else:
             try:
+                # Recreate only when the instance is detached (invisible + no parent).
                 needs_recreate = (not self.game_picker_window.isVisible() and self.game_picker_window.parent() is None)
             except RuntimeError as exc:
                 logger.debug("Picker visibility check failed; recreating window: %s", exc)
                 needs_recreate = True
             if not needs_recreate:
-                self.game_picker_window.refresh_state_on_open()
-                self.game_picker_window.show()
-                self.game_picker_window.raise_()
-                self.game_picker_window.activateWindow()
+                self._show_and_activate_picker()
                 return
             # keep single instance but recover if somehow detached/invalid
             try:
                 self.game_picker_window.close()
                 self.game_picker_window.deleteLater()
             except RuntimeError as exc:
-                msg = str(exc).lower()
-                if "wrapped c/c++ object" in msg or "deleted" in msg:
+                if self._is_picker_deleted():
                     logger.debug("Detached picker cleanup skipped; Qt object already deleted")
                 else:
                     raise
             self._create_picker_window()
-        self.game_picker_window.refresh_state_on_open()
-        self.game_picker_window.show()
-        self.game_picker_window.raise_()
-        self.game_picker_window.activateWindow()
+        self._show_and_activate_picker()
 
     def toggle_start_windows(self, checked):
         self.config_manager.set_setting("start_with_windows", checked)
