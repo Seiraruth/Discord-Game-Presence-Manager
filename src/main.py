@@ -26,7 +26,7 @@ LOGS_DIR.mkdir(parents=True, exist_ok=True)
 ASSETS_DIR.mkdir(parents=True, exist_ok=True)
 LANG_DIR.mkdir(parents=True, exist_ok=True)
 
-logger = logging.getLogger('geforce_presence')
+logger = logging.getLogger('discord_presence_manager')
 logger.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
 
@@ -74,7 +74,7 @@ def main():
         lang = get_lang_from_registry()
         texts = load_locale(lang)
     except Exception:
-        lang = os.getenv('GEFORCE_LANG', 'en')
+        lang = os.getenv('DISCORD_PRESENCE_LANG', 'en')
         texts = load_locale(lang)
 
     # 4. Initialize PyQt Application
@@ -91,7 +91,7 @@ def main():
     if config_manager.get_setting("start_with_windows", False):
         try:
             import winshell
-            app_name = "GeForceNOWRichPresence"
+            app_name = "DiscordPresenceManager"
             shortcut_path = os.path.join(winshell.startup(), f"{app_name}.lnk")
             if not os.path.exists(shortcut_path):
                 logger.info("Creando acceso directo de inicio de Windows faltante...")
@@ -105,10 +105,7 @@ def main():
     if config_manager.get_setting("start_discord_on_launch", False):
         AppLauncher.launch_discord()
     
-    if config_manager.get_setting("start_gfn_on_launch", False):
-        AppLauncher.launch_geforce_now()
-
-    # 5.2 Update Edge Driver
+        # 5.2 Update Edge Driver
     #MOVE TO TRAY ICON
     
     test_rich_url = os.getenv("TEST_RICH_URL", "").strip()

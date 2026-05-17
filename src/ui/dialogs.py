@@ -10,10 +10,10 @@ try:
     LANG = get_lang_from_registry()
     TEXTS = load_locale(LANG)
 except Exception:
-    LANG = os.getenv('GEFORCE_LANG', 'en')
+    LANG = os.getenv('DISCORD_PRESENCE_LANG', 'en')
     TEXTS = load_locale(LANG)
 
-logger = logging.getLogger('geforce_presence')
+logger = logging.getLogger('discord_presence_manager')
 
 
 # ---- ESTILOS GLOBALES ----

@@ -17,7 +17,7 @@ from PyQt5.QtWidgets import QMessageBox
 
 from src.core.utils import DRIVER_PATH, IS_WINDOWS
 
-logger = logging.getLogger('geforce_presence')
+logger = logging.getLogger('discord_presence_manager')
 
 class EdgeDriverUpdater:
     """

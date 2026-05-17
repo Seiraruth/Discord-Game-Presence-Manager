@@ -37,7 +37,7 @@ else:
     win32gui = None
     win32process = None
 
-logger = logging.getLogger('geforce_presence')
+logger = logging.getLogger('discord_presence_manager')
 
 class PresenceManager(QObject):
     # Signals to communicate with UI
@@ -48,7 +48,6 @@ class PresenceManager(QObject):
     download_progress = pyqtSignal(int, int) # current_bytes, total_bytes
     sync_finished = pyqtSignal(int, int) # updated_count, total_processed
     sync_error = pyqtSignal(str)
-    gfn_error_detected = pyqtSignal()
     
     def __init__(self, client_id: str, games_map: dict, cookie_manager: CookieManager, test_rich_url: str, texts: Dict,
                  update_interval: int = 10, keep_alive: bool = False):
@@ -1066,7 +1065,7 @@ class PresenceManager(QObject):
         try:
             self.check_quests() # Check optional quests
             
-            game = self.find_active_game()
+            game = self.forced_game
             self.update_presence(game)
 
 
@@ -1084,197 +1083,13 @@ class PresenceManager(QObject):
             self.close_fake_executable()
 
     def find_active_game(self) -> Optional[dict]:
-        try:
-            title = None
-            
-            if IS_WINDOWS:
-                if not win32gui:
-                    logger.error("win32gui not available")
-                    return None
-                    
-                hwnds = []
-                win32gui.EnumWindows(lambda h, p: p.append(h) if win32gui.IsWindowVisible(h) else None, hwnds)
-                last_title = getattr(self, "_last_window_title", None)
-                
-                # OPTIMIZATION: Get GFN PIDs once to avoid instantiating psutil.Process for every visible window
-                gef_pids = set()
-                try:
-                    for proc in psutil.process_iter(['name', 'pid']):
-                        if proc.info['name'] and proc.info['name'].lower() == "geforcenow.exe":
-                            gef_pids.add(proc.pid)
-                except Exception:
-                    pass
-
-                for hwnd in hwnds:
-                    try:
-                        _, pid = win32process.GetWindowThreadProcessId(hwnd)
-                        if pid not in gef_pids:
-                            continue
-                    except Exception:
-                        continue
-                    title = win32gui.GetWindowText(hwnd)
-                    break
-            
-            elif IS_MACOS:
-                # Use AppleScript to get the window title of GeForce NOW
-                # We assume the process name is "GeForceNOW" or similar.
-                # The AppleScript gets the window 1 of process "GeForceNOW"
-                cmd = """
-                tell application "System Events"
-                    set procName to "GeForceNOW"
-                    if exists process procName then
-                        try
-                            return name of window 1 of process procName
-                        on error
-                            return ""
-                        end try
-                    end if
-                    return ""
-                end tell
-                """
-                result = subprocess.run(["osascript", "-e", cmd], capture_output=True, text=True)
-                if result.returncode == 0:
-                    title = result.stdout.strip()
-
-            elif IS_LINUX:
-                # Linux logic using xprop (assumes X11 for now)
-                # We could also try /proc, but window title usually needs X11/Wayland tools
-                try:
-                    # Check if xprop is available
-                    # We are looking for a window with property _NET_WM_NAME or WM_NAME
-                    # and class name (WM_CLASS) related to GeForceNOW (if it exists)
-                    # For now, let's try a generic approach if the user is running it via browser/electron
-                    
-                    # Alternative: use standard 'w' tool or similar if available, but xprop is standard-ish for X11
-                    
-                    # We will try to find a window with "GeForce NOW" in title
-                    # cmd: xprop -root _NET_ACTIVE_WINDOW
-                    # then get title
-                    
-                    # Simple approach: Check all windows (requires tools)
-                    # Better: rely on process name first?
-                    # GFN on linux is likely Chrome/Edge.
-                    
-                    # NOTE: Since GFN is web-based on Linux usually, detection might be tricky without a dedicated app.
-                    # If this is for a dedicated Electron wrapper, we assume process name matches.
-                    
-                    pass 
-                except Exception:
-                    pass
-                
-                # Placeholder for Linux title detection
-                # If running via Browser, title might be "GeForce NOW - Google Chrome"
-                pass
-            
-            if not title:
-                self.log_once("⚠️ GeForce NOW no está abierto (o sin ventana activa)")
-                return None
-
-            last_title = getattr(self, "_last_window_title", None)
-            if title == last_title:
-                pass
-            else:
-                setattr(self, "_last_window_title", title)
-
-            if "Application Launch failed" in title or "Application resource corrupted" in title:
-                now = time.time()
-                last_time = getattr(self, "_last_gfn_error_time", 0)
-                if now - last_time > 60:
-                    setattr(self, "_last_gfn_error_time", now)
-                    self.gfn_error_detected.emit()
-                return None
-
-            clean = re.sub(r'\s*(en|on|in|via)?\s*GeForce\s*NOW.*$', '', title, flags=re.IGNORECASE).strip()
-            clean = re.sub(r'[®™]', '', clean).strip()
-            
-            last_clean = getattr(self, "_last_clean_title", None)
-            if clean != last_clean:
-                setattr(self, "_last_clean_title", clean)
-            if not clean:
-                return None
-
-            appid = None 
-            for game_name, info in self.games_map.items():
-                if clean.lower() == game_name.lower():
-                    if not info.get("steam_appid"):
-                        appid = find_steam_appid_by_name(clean)
-                        if appid:
-                            info["steam_appid"] = appid
-                            config_path = CONFIG_DIR / "games_config_merged.json"
-                            games_config = safe_json_load(config_path) or {}
-                            games_config.setdefault(game_name, {})
-                            games_config[game_name]["steam_appid"] = appid
-                            save_json(games_config, config_path)
-                            logger.info(f"✅ Steam AppID actualizado en JSON para: {game_name} -> {appid}")
-                            self.games_map = games_config
-                    
-                    # Check if missing client_id
-                    if not info.get("client_id"):
-                        try:
-                            threading.Thread(
-                                target=self._ensure_discord_match,
-                                args=(clean,),
-                                daemon=True
-                            ).start()
-                        except Exception as e:
-                            logger.debug(f"no se pudo iniciar hilo de discord-match (update): {e}")
-
-                    # Asegurar que el nombre está en el objeto devuelto
-                    info["name"] = game_name
-                    return info
-            appid = find_steam_appid_by_name(clean)
-            new_game = {
-                "name": clean,
-                "steam_appid": appid,
-                "image": "steam"
-            }
-            self.games_map[clean] = new_game
-            config_path = CONFIG_DIR / "games_config_merged.json"
-            games_config = safe_json_load(config_path) or {}
-            games_config[clean] = new_game
-            save_json(games_config, config_path)
-            updated = self.games_map.get(clean)
-            if updated:
-                new_game = updated
-            logger.info(f"🆕 Juego agregado a config: {clean} (AppID: {appid})")
-            self.games_map = games_config
-
-            try:
-                threading.Thread(
-                    target=self._ensure_discord_match,
-                    args=(clean,),
-                    daemon=True
-                ).start()
-            except Exception as e:
-                logger.debug(f"no se pudo iniciar hilo de discord-match: {e}")
-            return new_game
-
-        except Exception as e:
-            if str(e) == "cannot access local variable 'title' where it is not associated with a value":
-                self.log_once(f"⚠️ GeForce NOW está cerrado")
-            else:
-                logger.error(f"⚠️ Error detectando juego activo: {e}")
+        return self.forced_game
 
     def log_once(self, msg, level="info"):
         if msg != self.last_log_message:
             getattr(logger, level)(msg)
             self.last_log_message = msg
 
-    def is_geforce_running(self) -> bool:
-        try:
-            for proc in psutil.process_iter(attrs=['name']):
-                name = (proc.info.get('name') or "").lower()
-                if IS_WINDOWS:
-                    if name == "geforcenow.exe":
-                        return True
-                elif IS_MACOS:
-                    # Verify exact process name on macOS
-                    if name == "geforcenow": # Likely "GeForceNOW"
-                        return True
-        except Exception as e:
-            logger.debug(f"Error comprobando procesos: {e}")
-        return False
-    
     def clear_forced_game(self):
         if self.forced_game:
             logger.info(f"🧹 Modo forzado desactivado: {self.forced_game.get('name')}")
@@ -1470,7 +1285,7 @@ class PresenceManager(QObject):
 
         # Restore ignore check
         rn = (current_game.get('name') or '').strip().lower()
-        if rn in ["geforce now", "games", ""]:
+        if rn in ["games", ""]:
             try:
                 if self.rpc: self.rpc.clear()
             except:
