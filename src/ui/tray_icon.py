@@ -1,3 +1,4 @@
+import os
 import logging
 import threading
 import time
@@ -58,9 +59,6 @@ class SystemTrayIcon(QSystemTrayIcon):
         """)
 
         
-        self._reinstaller_worker = None
-        self._repair_dialog = None
-
         self.create_menu()
         self.setContextMenu(self.menu)
         

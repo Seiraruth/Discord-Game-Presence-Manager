@@ -17,11 +17,11 @@ VSVersionInfo(
           u'040904B0',
           [
             StringStruct(u'CompanyName', u'KarmaDevz'),
-            StringStruct(u'FileDescription', u'GeForce NOW Rich Presence'),
+            StringStruct(u'FileDescription', u'Discord Presence Manager'),
             StringStruct(u'FileVersion', u'3.0.19.0'),
-            StringStruct(u'InternalName', u'GeForce NOW Rich Presence'),
-            StringStruct(u'OriginalFilename', u'GeForceNOWRichPresence.exe'),
-            StringStruct(u'ProductName', u'GeForce NOW Rich Presence'),
+            StringStruct(u'InternalName', u'Discord Presence Manager'),
+            StringStruct(u'OriginalFilename', u'DiscordPresenceManager.exe'),
+            StringStruct(u'ProductName', u'Discord Presence Manager'),
             StringStruct(u'ProductVersion', u'3.0.19.0')
           ]
         )
