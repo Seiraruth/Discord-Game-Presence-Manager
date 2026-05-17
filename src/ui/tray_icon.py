@@ -189,7 +189,7 @@ class SystemTrayIcon(QSystemTrayIcon):
             self._create_picker_window()
         else:
             try:
-                # Recreate only when the instance is detached (invisible + no parent).
+                # Recreate only for detached windows (invisible and parentless), not normal hidden ones.
                 needs_recreate = (not self.game_picker_window.isVisible() and self.game_picker_window.parent() is None)
             except RuntimeError as exc:
                 logger.debug("Picker visibility check failed; recreating window: %s", exc)
@@ -197,7 +197,7 @@ class SystemTrayIcon(QSystemTrayIcon):
             if not needs_recreate:
                 self._show_and_activate_picker()
                 return
-            # keep single instance but recover if somehow detached/invalid
+            # Keep single instance but recover if somehow detached/invalid.
             try:
                 self.game_picker_window.close()
                 self.game_picker_window.deleteLater()
