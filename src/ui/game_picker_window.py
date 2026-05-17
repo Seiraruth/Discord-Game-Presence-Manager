@@ -1,0 +1,182 @@
+import difflib
+import logging
+from dataclasses import dataclass
+from typing import Dict, List
+
+from PyQt5.QtCore import Qt, QTimer, QSize, QRunnable, QThreadPool, pyqtSignal, QObject
+from PyQt5.QtGui import QPixmap, QPainter, QColor
+from PyQt5.QtWidgets import (
+    QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QListWidget, QListWidgetItem,
+    QPushButton, QMessageBox
+)
+
+from src.core.game_art_resolver import GameArtResolver
+
+logger = logging.getLogger('discord_presence_manager')
+
+@dataclass
+class GameEntry:
+    name: str
+    id: str = ""
+    executable_path: str = ""
+    steam_appid: str = ""
+    source: str = "Local"
+
+class WorkerSignals(QObject):
+    done = pyqtSignal(dict, object)
+
+class ArtJob(QRunnable):
+    def __init__(self, resolver, game, signals):
+        super().__init__()
+        self.resolver = resolver
+        self.game = game
+        self.signals = signals
+    def run(self):
+        path = self.resolver.resolve(self.game)
+        self.signals.done.emit(self.game, path)
+
+class GamePickerWindow(QDialog):
+    def __init__(self, pm, config_manager, tray_icon=None, parent=None):
+        super().__init__(parent)
+        self.pm = pm
+        self.config_manager = config_manager
+        self.tray_icon = tray_icon
+        self.resolver = GameArtResolver(config_manager)
+        self.thread_pool = QThreadPool.globalInstance()
+        self.recent = config_manager.get_setting("recent_forced_games", []) or []
+        self.entries: List[GameEntry] = []
+        self._by_name: Dict[str, GameEntry] = {}
+
+        self.setWindowTitle("Force Game")
+        self.resize(980, 700)
+        self.setStyleSheet("QDialog{background:#1e1f22;color:#dcddde;} QLineEdit{background:#2b2d31;color:#fff;padding:8px;border:1px solid #444;} QListWidget{background:#1e1f22;border:1px solid #333;} QPushButton{background:#2b2d31;color:#fff;padding:8px;} QPushButton:hover{background:#3b3d42;}")
+
+        lay = QVBoxLayout(self)
+        lay.addWidget(QLabel("<h2>Force Game</h2>"))
+        self.search = QLineEdit(); self.search.setPlaceholderText("Search games...")
+        lay.addWidget(self.search)
+        self.status = QLabel("Active game: none")
+        lay.addWidget(self.status)
+
+        self.list = QListWidget()
+        self.list.setViewMode(QListWidget.IconMode)
+        self.list.setIconSize(QSize(160, 220))
+        self.list.setResizeMode(QListWidget.Adjust)
+        self.list.setMovement(QListWidget.Static)
+        self.list.setSpacing(10)
+        lay.addWidget(self.list, 1)
+
+        btns = QHBoxLayout()
+        self.stop_btn = QPushButton("Stop Current Presence")
+        self.sync_btn = QPushButton("Sync Games")
+        self.refresh_btn = QPushButton("Refresh Covers")
+        self.close_btn = QPushButton("Close")
+        for b in (self.stop_btn, self.sync_btn, self.refresh_btn, self.close_btn): btns.addWidget(b)
+        lay.addLayout(btns)
+
+        self.search_timer = QTimer(self); self.search_timer.setSingleShot(True); self.search_timer.setInterval(180)
+        self.search.textChanged.connect(lambda: self.search_timer.start())
+        self.search_timer.timeout.connect(self.apply_filter)
+        self.list.itemClicked.connect(self.force_from_item)
+        self.list.itemDoubleClicked.connect(lambda item: self.force_from_item(item, minimize=True))
+        self.stop_btn.clicked.connect(self.stop_presence)
+        self.sync_btn.clicked.connect(lambda: self.tray_icon.sync_games() if self.tray_icon else None)
+        self.refresh_btn.clicked.connect(self.refresh_covers)
+        self.close_btn.clicked.connect(self.close)
+
+        self.load_games()
+        self.apply_filter()
+
+    def load_games(self):
+        self.entries = []
+        gm = self.pm.games_map or {}
+        for name, data in gm.items():
+            e = GameEntry(name=name, id=str(data.get("client_id") or ""), executable_path=data.get("executable_path") or "", steam_appid=str(data.get("steam_appid") or ""), source="Local")
+            self.entries.append(e); self._by_name[name.lower()] = e
+        for d in self.pm._fetch_discord_apps_cached(force_download=False) or []:
+            name = d.get("name")
+            if name and name.lower() not in self._by_name:
+                e = GameEntry(name=name, id=str(d.get("id") or ""), source="Discord")
+                self.entries.append(e); self._by_name[name.lower()] = e
+
+    def _rank(self, name, q):
+        n, ql = name.lower(), q.lower()
+        if not ql: return 100 if n in [x.lower() for x in self.recent] else 0
+        if n == ql: return 1000
+        if n.startswith(ql): return 900
+        if ql in n: return 700
+        short = ''.join(ch for ch in n if ch.isalnum())
+        if all(ch in short for ch in ql): return 500
+        return int(difflib.SequenceMatcher(None, ql, n).ratio()*100)
+
+    def apply_filter(self):
+        q = self.search.text().strip()
+        ranked = sorted(self.entries, key=lambda e: self._rank(e.name, q), reverse=True)
+        self.list.clear()
+        for e in ranked[:300]:
+            if q and self._rank(e.name, q) < 35: continue
+            item = QListWidgetItem(f"{e.name}\n{e.source}")
+            item.setData(Qt.UserRole, e)
+            item.setIcon(self._placeholder_icon(e.name))
+            self.list.addItem(item)
+            self._queue_cover(item, e)
+
+    def _placeholder_icon(self, name):
+        pix = QPixmap(160, 220); pix.fill(QColor("#2b2d31"))
+        p = QPainter(pix); p.setPen(QColor("#cfd2d6")); p.drawText(pix.rect().adjusted(10,10,-10,-10), Qt.AlignCenter | Qt.TextWordWrap, name[:45]); p.end()
+        from PyQt5.QtGui import QIcon
+        return QIcon(pix)
+
+    def _queue_cover(self, item, entry):
+        signals = WorkerSignals()
+        signals.done.connect(lambda game, path, it=item: self._set_cover(it, path, game))
+        self.thread_pool.start(ArtJob(self.resolver, entry.__dict__, signals))
+
+    def _set_cover(self, item, path, game):
+        if not path: return
+        pix = QPixmap(str(path))
+        if pix.isNull(): return
+        from PyQt5.QtGui import QIcon
+        item.setIcon(QIcon(pix.scaled(160,220,Qt.KeepAspectRatioByExpanding,Qt.SmoothTransformation)))
+
+    def force_from_item(self, item, minimize=False):
+        e: GameEntry = item.data(Qt.UserRole)
+        try:
+            match = {"name": e.name, "id": e.id, "exe": e.executable_path or f"{e.name}.exe", "steam_appid": e.steam_appid}
+            self.tray_icon.apply_force_game(match)
+            self.status.setText(f"Active game: {e.name}")
+            self._push_recent(e.name)
+            if minimize:
+                self.close()
+        except Exception as ex:
+            logger.exception("Error forcing game")
+            QMessageBox.warning(self, "Force Game", f"Failed to force game: {ex}")
+
+    def _push_recent(self, name):
+        cur = [x for x in self.recent if x.lower() != name.lower()]
+        cur.insert(0, name)
+        self.recent = cur[:20]
+        self.config_manager.set_setting("recent_forced_games", self.recent)
+
+    def stop_presence(self):
+        self.pm.stop_force_game()
+        self.status.setText("Active game: none")
+
+    def refresh_covers(self):
+        self.apply_filter()
+
+    def keyPressEvent(self, ev):
+        if ev.key() == Qt.Key_Escape:
+            self.close(); return
+        if ev.key() in (Qt.Key_Return, Qt.Key_Enter) and self.list.count() == 1:
+            self.force_from_item(self.list.item(0)); return
+        super().keyPressEvent(ev)
+
+    def closeEvent(self, ev):
+        if self.config_manager.get_setting("remember_window_size", True):
+            self.config_manager.set_setting("game_picker_size", [self.width(), self.height()])
+        if self.config_manager.get_setting("minimize_to_tray_on_close", True):
+            ev.accept()
+            self.hide()
+            return
+        super().closeEvent(ev)

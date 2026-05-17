@@ -9,6 +9,7 @@ from PyQt5.QtWidgets import QDialog
 from src.core.utils import ASSETS_DIR, LOG_FILE, set_autostart_windows
 from src.core.app_launcher import AppLauncher
 from src.ui.dialogs import AskGameDialog, MatchSelectionDialog, GamingMessageBox, GamingInputDialog, QuestListDialog, CustomPresenceDialog, AboutDialog, GAMING_STYLESHEET
+from src.ui.game_picker_window import GamePickerWindow
 from src.core.utils import get_lang_from_registry, load_locale
 
 try:
@@ -59,6 +60,7 @@ class SystemTrayIcon(QSystemTrayIcon):
         """)
 
         
+        self.game_picker_window = None
         self.create_menu()
         self.setContextMenu(self.menu)
         
@@ -85,7 +87,7 @@ class SystemTrayIcon(QSystemTrayIcon):
             force_text = f"Stop forcing: {game_name}"
             
         force_action = QAction(force_text, self.menu)
-        force_action.triggered.connect(self.toggle_force_game)
+        force_action.triggered.connect(self.open_game_picker)
         self.menu.addAction(force_action)
         
         # Obtain Cookie
@@ -153,11 +155,23 @@ class SystemTrayIcon(QSystemTrayIcon):
         self.menu.addAction(exit_action)
 
     def update_menu(self):
+        self.game_picker_window = None
         self.create_menu()
 
     def on_activated(self, reason):
         if reason == QSystemTrayIcon.DoubleClick:
-            self.toggle_force_game()
+            self.open_game_picker()
+
+
+    def open_game_picker(self):
+        if not self.game_picker_window:
+            self.game_picker_window = GamePickerWindow(self.pm, self.config_manager, tray_icon=self)
+            size = self.config_manager.get_setting("game_picker_size", [])
+            if isinstance(size, list) and len(size) == 2:
+                self.game_picker_window.resize(size[0], size[1])
+        self.game_picker_window.show()
+        self.game_picker_window.raise_()
+        self.game_picker_window.activateWindow()
 
     def toggle_start_windows(self, checked):
         self.config_manager.set_setting("start_with_windows", checked)

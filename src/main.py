@@ -145,6 +145,9 @@ def main():
     tray_icon = SystemTrayIcon(presence_manager, texts, config_manager)
     tray_icon.show()
 
+    if config_manager.get_setting("open_game_picker_on_startup", True):
+        tray_icon.open_game_picker()
+
     # 8. Start Monitoring
     presence_manager.start_monitoring()
 

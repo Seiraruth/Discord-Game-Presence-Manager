@@ -266,7 +266,7 @@ class AskGameDialog(QDialog):
         sec_btns_layout = QVBoxLayout()
         sec_btns_layout.setSpacing(10)
 
-        self.quest_mode_btn = QPushButton(TEXTS.get("quest_mode", "Misiones de Discord (Múltiples Juegos)"))
+        self.quest_mode_btn = QPushButton(TEXTS.get("quest_mode", "Activity Simulator (Multiple Games)"))
         self.quest_mode_btn.setObjectName("secondary")
         self.quest_mode_btn.setAutoDefault(False)
         self.quest_mode_btn.clicked.connect(self.on_quest_mode_clicked)
@@ -323,7 +323,7 @@ class QuestListDialog(QDialog):
     def __init__(self, presence_manager, parent=None):
         super().__init__(parent)
         self.pm = presence_manager
-        self.setWindowTitle("Discord Quest Mode - Active Games")
+        self.setWindowTitle("Activity Simulator - Active Games")
         self.setWindowIcon(QIcon(str(ASSETS_DIR / "discord.png")))
         self.setMinimumWidth(450)
         self.setMinimumHeight(400)
