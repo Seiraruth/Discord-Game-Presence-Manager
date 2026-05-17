@@ -175,21 +175,40 @@ class SystemTrayIcon(QSystemTrayIcon):
                 return False
         return False
 
+    def _create_picker_window(self):
+        self.game_picker_window = GamePickerWindow(self.pm, self.config_manager, tray_icon=self)
+
+    def _show_and_activate_picker(self):
+        self.game_picker_window.refresh_state_on_open()
+        self.game_picker_window.show()
+        self.game_picker_window.raise_()
+        self.game_picker_window.activateWindow()
+
     def open_game_picker(self):
         if self.game_picker_window is None or self._is_picker_deleted():
-            self.game_picker_window = GamePickerWindow(self.pm, self.config_manager, tray_icon=self)
-        try:
-            self.game_picker_window.refresh_state_on_open()
-            self.game_picker_window.show()
-            self.game_picker_window.raise_()
-            self.game_picker_window.activateWindow()
-        except RuntimeError:
-            logger.warning("Game picker Qt object was invalid at show-time, recreating.")
-            self.game_picker_window = GamePickerWindow(self.pm, self.config_manager, tray_icon=self)
-            self.game_picker_window.refresh_state_on_open()
-            self.game_picker_window.show()
-            self.game_picker_window.raise_()
-            self.game_picker_window.activateWindow()
+            self._create_picker_window()
+        else:
+            try:
+                # Recreate only for detached windows (invisible and parentless), not normal hidden ones.
+                needs_recreate = (not self.game_picker_window.isVisible() and self.game_picker_window.parent() is None)
+            except RuntimeError as exc:
+                logger.debug("Picker visibility check failed; recreating window: %s", exc)
+                needs_recreate = True
+            if not needs_recreate:
+                self._show_and_activate_picker()
+                return
+            # Keep single instance but recover if somehow detached/invalid.
+            try:
+                self.game_picker_window.close()
+                self.game_picker_window.deleteLater()
+            except RuntimeError as exc:
+                if self._is_picker_deleted():
+                    logger.debug("Detached picker cleanup skipped; Qt object already deleted")
+                else:
+                    logger.error("Unexpected RuntimeError while cleaning detached picker: %s", exc)
+                    raise
+            self._create_picker_window()
+        self._show_and_activate_picker()
 
     def toggle_start_windows(self, checked):
         self.config_manager.set_setting("start_with_windows", checked)
