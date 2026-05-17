@@ -184,10 +184,25 @@ class SystemTrayIcon(QSystemTrayIcon):
 
     def _show_and_activate_picker(self):
         """Refresh and focus the existing picker instance."""
+        self.game_picker_window.refresh_state_on_open()
         self.game_picker_window.show()
         self.game_picker_window.raise_()
         self.game_picker_window.activateWindow()
         QTimer.singleShot(0, self.game_picker_window.refresh_state_on_open)
+
+    def open_game_picker(self):
+        """
+        Reuse picker by default; recreate only when missing/deleted
+        or if Qt raises RuntimeError during show/activate.
+        """
+        if self.game_picker_window is None or self._is_picker_deleted():
+            self._create_picker_window()
+        try:
+            self._show_and_activate_picker()
+        except RuntimeError as exc:
+            logger.debug("Existing picker invalid during show/focus; recreating: %s", exc)
+            self._create_picker_window()
+            self._show_and_activate_picker()
 
     def open_game_picker(self):
         """
