@@ -224,8 +224,8 @@ class GamePickerWindow(QDialog):
         logger.debug("Game picker apply_filter done in %.2fs (shown=%s total=%s)", time.perf_counter() - t0, shown, total)
         if self._pending_cover_items and not self._cover_batch_timer.isActive():
             self._cover_batch_timer.start()
-        if self._pending_cover_items and not self._covers_timer.isActive():
-            self._covers_timer.start()
+        if self._pending_cover_items and not self._cover_batch_timer.isActive():
+            self._cover_batch_timer.start()
 
     def _process_cover_batch(self):
         t0 = time.perf_counter()
@@ -235,7 +235,7 @@ class GamePickerWindow(QDialog):
             self._queue_cover(item, entry)
         if not self._pending_cover_items:
             self._cover_batch_timer.stop()
-            self._covers_timer.stop()
+            self._cover_batch_timer.stop()
         logger.debug("Game picker queued %s cover jobs in %.3fs", len(batch), time.perf_counter() - t0)
 
     def _placeholder_icon(self, name):
@@ -401,6 +401,8 @@ class GamePickerWindow(QDialog):
                 self._loaded = True
                 self._discord_entries_loaded = False
                 QTimer.singleShot(50, self.load_discord_cache_async)
+        except Exception:
+            logger.exception("Failed to detect/reload changed game map")
         try:
             if self._games_signature() != self._last_games_signature:
                 self.load_local_games()
