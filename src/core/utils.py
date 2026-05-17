@@ -162,7 +162,8 @@ def load_locale(lang: str = "en") -> dict:
         return {}
 
 def ensure_env_file(path: Path):
-    default_env_content = """# Required: set your own Discord Application Client ID
+    default_env_content = """# Optional: override bundled Discord Application Client ID
+# If empty, app uses bundled default CLIENT_ID (1095416975028650046)
 CLIENT_ID = ''
 UPDATE_INTERVAL = 10
 CONFIG_PATH_FILE = ''

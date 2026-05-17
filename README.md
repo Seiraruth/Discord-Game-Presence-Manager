@@ -22,9 +22,11 @@ Discord Presence Manager is a desktop tray app that lets you control what Discor
    ```bash
    pip install -r requirements.txt
    ```
-4. Create `.env` in the repository root (or let the app create a template) and define:
+4. (Optional) Create `.env` in the repository root (or let the app create a template).  
+   The app already ships with a default Discord Application Client ID, so `.env` is not required to start.
+   If you want to override it, define:
    ```env
-   CLIENT_ID=YOUR_DISCORD_APPLICATION_CLIENT_ID
+   CLIENT_ID=your_application_id
    ```
 5. Start the app:
    ```bash
@@ -32,9 +34,12 @@ Discord Presence Manager is a desktop tray app that lets you control what Discor
    ```
 
 ## `.env` / `CLIENT_ID` configuration
-- `CLIENT_ID` is required.
-- It must be a valid Discord Application Client ID you want to use as the default RPC app.
-- If `CLIENT_ID` is missing, the app exits with a clear startup error instead of silently skipping RPC.
+- The app includes a bundled default Discord Application Client ID: `1095416975028650046`.
+- Advanced users can override it in `.env`:
+  ```env
+  CLIENT_ID=your_application_id
+  ```
+- If `CLIENT_ID` is not set in `.env`, the bundled default is used automatically.
 
 Optional variables:
 - `UPDATE_INTERVAL` (seconds, default `10`)

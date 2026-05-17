@@ -124,7 +124,7 @@ GAMING_STYLESHEET = """
 
 logger = logging.getLogger('discord_presence_manager')
 
-GITHUB_RELEASES_URL = "https://api.github.com/repos/KarmaDevz/Discord-Game-Presence-Manager/releases/latest"
+GITHUB_RELEASES_URL = "https://api.github.com/repos/Seiraruth/Discord-Game-Presence-Manager/releases/latest"
 
 def parse_version(v_str):
     """Simple semantic version parser (e.g., '1.0.0' -> (1, 0, 0))"""
@@ -154,6 +154,10 @@ class UpdateWorker(QThread):
         try:
             logger.info("📦 Buscando actualizaciones...")
             response = requests.get(GITHUB_RELEASES_URL, timeout=10)
+            if response.status_code == 404:
+                logger.info("No releases available for updater repository yet.")
+                self.check_finished.emit(False, "", "", "")
+                return
             response.raise_for_status()
             data = response.json()
 
