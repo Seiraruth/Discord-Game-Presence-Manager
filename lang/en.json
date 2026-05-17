@@ -1,6 +1,6 @@
 {
     "already_running": "💡 Discord Presence Manager is already running",
-    "quest_mode": "Discord Quest Mode (Multiple Games)",
+    "quest_mode": "Activity Simulator (Multiple Games)",
     "active_games": "Active Games (15 minutes max.)",
     "close_window": "Close Window (Games will continue)",
     "force_new_game": "Force New Game",

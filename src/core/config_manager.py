@@ -25,7 +25,15 @@ class ConfigManager:
                         "start_discord_on_launch": False,
             "get_cookie_on_launch": False,
             "idle_presence_enabled": False,
-            "clear_presence_when_idle": True
+            "clear_presence_when_idle": True,
+            "open_game_picker_on_startup": True,
+            "minimize_to_tray_on_close": True,
+            "remember_window_size": True,
+            "show_recent_games_first": True,
+            "enable_game_art_download": True,
+            "steamgriddb_api_key": "",
+            "game_art_cache_days": 30,
+            "recent_forced_games": []
         }
         self.app_settings_path = CONFIG_DIR / "app_settings.json"
         self._load()

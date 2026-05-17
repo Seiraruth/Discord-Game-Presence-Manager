@@ -63,3 +63,37 @@ This repository currently focuses on source execution; packaging steps may vary 
 
 ## Disclaimer about fake executable mode
 The fake executable mode is intended for **Discord detection testing** and manual presence control workflows. Use responsibly and only in environments where this behavior is acceptable.
+
+## New Force Game picker window
+- By default, launching the app now opens a **Force Game** picker window immediately while still keeping tray support.
+- You can search games quickly and click visual cards (with cover art when available) to force the activity.
+- Double-click a card to force and minimize to tray.
+- Tray **Force Game** now opens/focuses the same picker window.
+
+### Cover image resolution and cache
+Cover priority:
+1. Cached local cover (`config/cache/game_art/`)
+2. Steam CDN cover (when `steam_appid` exists)
+3. SteamGridDB (optional)
+4. Placeholder card with game title
+
+Cache index is stored at `config/cache/game_art_index.json`.
+
+### Optional SteamGridDB API key
+You can configure artwork lookup with either:
+- setting `steamgriddb_api_key` in app settings, or
+- env var `STEAMGRIDDB_API_KEY`
+
+If no key is present, the app still works and uses other cover sources/fallback placeholders.
+
+### New relevant settings
+`app_settings.json` now supports:
+- `open_game_picker_on_startup` (default `true`)
+- `minimize_to_tray_on_close` (default `true`)
+- `remember_window_size` (default `true`)
+- `show_recent_games_first` (default `true`)
+- `enable_game_art_download` (default `true`)
+- `steamgriddb_api_key` (default empty)
+- `game_art_cache_days` (default `30`)
+
+Set `open_game_picker_on_startup` to `false` to keep tray-only startup behavior.
