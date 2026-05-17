@@ -54,6 +54,11 @@ class GamePickerWindow(QDialog):
         self._cover_batch_timer.setInterval(100)
         self._cover_batch_timer.timeout.connect(self._process_cover_batch)
         self._max_visible_results = int(self._get_setting("game_picker_max_visible_results", 120) or 120)
+        self._search_limit = int(self._get_setting("game_picker_search_limit", 60) or 60)
+        self._empty_limit = int(self._get_setting("game_picker_empty_limit", 40) or 40)
+        self._cover_initial_batch_size = int(self._get_setting("game_art_initial_batch_size", 8) or 8)
+        self._cover_batch_size = int(self._get_setting("game_art_batch_size", 4) or 4)
+        self._load_discord_cache_on_startup = bool(self._get_setting("load_discord_cache_on_startup", False))
 
         self.resolver = GameArtResolver(config_manager)
         self.thread_pool = QThreadPool.globalInstance()
@@ -69,7 +74,16 @@ class GamePickerWindow(QDialog):
 
         self.setWindowTitle("Force Game")
         self.resize(980, 700)
-        self.setStyleSheet("QDialog{background:#1e1f22;color:#dcddde;} QLineEdit{background:#2b2d31;color:#fff;padding:8px;border:1px solid #444;} QListWidget{background:#1e1f22;border:1px solid #333;} QPushButton{background:#2b2d31;color:#fff;padding:8px;} QPushButton:hover{background:#3b3d42;}")
+        self.setStyleSheet(
+            "QDialog{background:#1e1f22;color:#f2f3f5;}"
+            "QLabel{color:#e5e8ec;}"
+            "QLineEdit{background:#2b2d31;color:#ffffff;padding:8px;border:1px solid #4f545c;selection-background-color:#5865f2;}"
+            "QListWidget{background:#1e1f22;border:1px solid #3b3f45;color:#f2f3f5;}"
+            "QListWidget::item{color:#f2f3f5;border:1px solid #2a2d31;padding:4px;}"
+            "QListWidget::item:selected{background:#2f365f;border:1px solid #5865f2;color:#ffffff;}"
+            "QPushButton{background:#2b2d31;color:#ffffff;padding:8px;border:1px solid #4f545c;}"
+            "QPushButton:hover{background:#3b3d42;}"
+        )
 
         lay = QVBoxLayout(self)
         lay.addWidget(QLabel("<h2>Force Game</h2>"))
@@ -96,7 +110,7 @@ class GamePickerWindow(QDialog):
         for b in (self.stop_btn, self.sync_btn, self.refresh_btn, self.close_btn): btns.addWidget(b)
         lay.addLayout(btns)
 
-        self.search_timer = QTimer(self); self.search_timer.setSingleShot(True); self.search_timer.setInterval(180)
+        self.search_timer = QTimer(self); self.search_timer.setSingleShot(True); self.search_timer.setInterval(250)
         self.search.textChanged.connect(lambda: self.search_timer.start())
         self.search_timer.timeout.connect(self.apply_filter)
         self.list.itemClicked.connect(self.force_from_item)
@@ -136,6 +150,8 @@ class GamePickerWindow(QDialog):
             logger.debug("Game picker loaded %s local games in %.2fs", len(self.entries), time.perf_counter() - t0)
             self.apply_filter()
             self.refresh_state_on_open()
+            if self._load_discord_cache_on_startup:
+                QTimer.singleShot(50, self.load_discord_cache_async)
             QTimer.singleShot(50, self.load_discord_cache_async)
         except Exception:
             logger.exception("Failed to load game picker data")
@@ -179,7 +195,10 @@ class GamePickerWindow(QDialog):
         if not ql: return 100 if n in [x.lower() for x in self.recent] else 0
         if n == ql: return 1000
         if n.startswith(ql): return 900
+        if any(part.startswith(ql) for part in n.split()): return 800
         if ql in n: return 700
+        if len(ql) <= 2:
+            return 0
         short = ''.join(ch for ch in n if ch.isalnum())
         if all(ch in short for ch in ql): return 500
         return int(difflib.SequenceMatcher(None, ql, n).ratio()*100)
@@ -195,18 +214,48 @@ class GamePickerWindow(QDialog):
         q = self.search.text().strip()
         t0 = time.perf_counter()
         ranked = []
+        matched_count = 0
         for e in self.entries:
             score = self._rank(e.name, q)
             if q and score < 35:
                 continue
+            matched_count += 1
             ranked.append((score, e))
         ranked.sort(key=lambda x: x[0], reverse=True)
         total = len(self.entries)
+        render_limit = self._search_limit if q else self._empty_limit
         self.list.clear()
         self._cover_batch_timer.stop()
         self._pending_cover_items.clear()
         shown = 0
         self._visible_keys = set()
+        self.list.setUpdatesEnabled(False)
+        try:
+            for _, e in ranked[:render_limit]:
+                item = QListWidgetItem(f"{e.name}\n{e.source}")
+                item.setData(Qt.UserRole, e)
+                key = self._entry_key(e)
+                item.setData(Qt.UserRole + 1, key)
+                self._visible_keys.add(key)
+                cached_icon = self._icon_cache.get(key)
+                item.setIcon(cached_icon if cached_icon else self._placeholder_icon(e.name))
+                self.list.addItem(item)
+                shown += 1
+                if not cached_icon:
+                    self._pending_cover_items.append((item, e))
+        finally:
+            self.list.setUpdatesEnabled(True)
+        if q:
+            self.results_status.setText(f"Showing {shown} of {matched_count} matches · Library: {total}")
+        else:
+            self.results_status.setText(f"Showing {shown} games · Library: {total}")
+        elapsed = time.perf_counter() - t0
+        logger.debug("Game picker filter query=%r matched=%s shown=%s total=%s in %.3fs", q, matched_count, shown, total, elapsed)
+        if self._pending_cover_items:
+            initial = self._pending_cover_items[:self._cover_initial_batch_size]
+            self._pending_cover_items = self._pending_cover_items[self._cover_initial_batch_size:]
+            for item, e in initial:
+                self._queue_cover(item, e)
         self._pending_cover_items = []
         for _, e in ranked[:self._max_visible_results]:
             item = QListWidgetItem(f"{e.name}\n{e.source}")
@@ -229,6 +278,8 @@ class GamePickerWindow(QDialog):
 
     def _process_cover_batch(self):
         t0 = time.perf_counter()
+        batch = self._pending_cover_items[:self._cover_batch_size]
+        self._pending_cover_items = self._pending_cover_items[self._cover_batch_size:]
         batch = self._pending_cover_items[:12]
         self._pending_cover_items = self._pending_cover_items[12:]
         for item, entry in batch:
@@ -251,6 +302,7 @@ class GamePickerWindow(QDialog):
             item.setIcon(cached_icon)
             return
         if key in self._in_flight_art:
+            return
             return
             return
         if key in self._in_flight_art:
@@ -401,6 +453,8 @@ class GamePickerWindow(QDialog):
                 self.load_games()
                 self._loaded = True
                 self._discord_entries_loaded = False
+                if self._load_discord_cache_on_startup:
+                    QTimer.singleShot(50, self.load_discord_cache_async)
                 QTimer.singleShot(50, self.load_discord_cache_async)
         except Exception:
             logger.exception("Failed to detect/reload changed game map")
