@@ -51,12 +51,6 @@ class GamePickerWindow(QDialog):
         self._visible_keys = set()
         self._in_flight_art = set()
         self._last_games_signature = None
-        self._max_visible_results = int(self.config_manager.get_setting("game_picker_max_visible_results", 120) or 120)
-        self._pending_cover_items = []
-        self._discord_entries_loaded = False
-        self._covers_timer = QTimer(self)
-        self._covers_timer.setInterval(100)
-        self._covers_timer.timeout.connect(self._process_cover_batch)
 
         self.setWindowTitle("Force Game")
         self.resize(980, 700)
@@ -132,6 +126,7 @@ class GamePickerWindow(QDialog):
         self._discord_entries_loaded = True
         logger.debug("Game picker loaded discord cache entries in %.2fs (total entries=%s)", time.perf_counter() - t0, len(self.entries))
         self.apply_filter()
+        self._last_games_signature = self._games_signature()
 
     def _rank(self, name, q):
         n, ql = name.lower(), q.lower()
@@ -195,6 +190,9 @@ class GamePickerWindow(QDialog):
         cached_icon = self._icon_cache.get(key)
         if cached_icon:
             item.setIcon(cached_icon)
+            return
+        if key in self._in_flight_art:
+            return
             return
         if key in self._in_flight_art:
             return
@@ -287,6 +285,7 @@ class GamePickerWindow(QDialog):
                 self.load_local_games()
                 self._discord_entries_loaded = False
                 QTimer.singleShot(50, self.load_discord_cache_async)
+                self.load_games()
         except Exception:
             logger.exception("Failed to detect/reload changed game map")
 
