@@ -109,7 +109,11 @@ def main():
     #MOVE TO TRAY ICON
     
     test_rich_url = os.getenv("TEST_RICH_URL", "").strip()
-    client_id = os.getenv("CLIENT_ID", "").strip() or "1095416975028650046"
+    client_id = os.getenv("CLIENT_ID", "").strip()
+    if not client_id:
+        logger.error("❌ Falta CLIENT_ID en .env. Define un Discord Application Client ID válido para continuar.")
+        release_lock()
+        sys.exit(1)
     steam_cookie_env = os.getenv("STEAM_COOKIE", "").strip() or None
     update_interval = int(os.getenv("UPDATE_INTERVAL", "10"))
 
@@ -121,7 +125,9 @@ def main():
         cookie_manager=cookie_manager,
         test_rich_url=test_rich_url,
         texts=texts,
-        update_interval=update_interval
+        update_interval=update_interval,
+        idle_presence_enabled=config_manager.get_setting("idle_presence_enabled", False),
+        clear_presence_when_idle=config_manager.get_setting("clear_presence_when_idle", True)
     )
 
     # 6.1 Optional Cookie Fetch

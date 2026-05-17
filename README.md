@@ -1,22 +1,65 @@
 # Discord Presence Manager
 
-Windows tray application for manually controlling Discord Rich Presence.
+Discord Presence Manager is a desktop tray app that lets you control what Discord displays as your current game/activity. It can force a selected game profile, apply custom Rich Presence fields, and optionally enrich status from Steam Rich Presence data.
 
-## Features
-- Force Game from tray
-- Custom rich presence fields (details/state/party/images/timestamps)
-- Steam cookie retrieval and Steam scraper integration
-- Discord detectable apps sync/cache
-- Fake executable launch/cleanup (`tools/dumb.exe`) for detection
-- Settings persistence, logs, Windows auto-start, optional Discord launch
+## What the app does
+- Runs in the system tray and manages Discord Rich Presence.
+- Lets you **Force Game** from your configured game list.
+- Can launch a fake executable name (`tools/dumb.exe`) so Discord detects the selected game executable name for testing/control scenarios.
+- Supports optional Steam cookie integration to read status/group details from Steam Rich Presence.
+- Provides Discord detectable-app sync to auto-fill missing `client_id` and executable mappings.
 
-## Tray Menu
-- Force Game
-- Stop Current Presence
-- Custom Presence
-- Get Steam Cookie
-- Sync Discord Games
-- Settings
-- Open Logs
-- About
-- Exit
+## Requirements
+- Python 3.10+
+- Discord desktop app running locally
+- Windows is the primary supported platform (some code paths exist for macOS/Linux)
+- Dependencies from `requirements.txt`
+
+## Run from source
+1. Clone this repository.
+2. Create and activate a virtual environment.
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. Create `.env` in the repository root (or let the app create a template) and define:
+   ```env
+   CLIENT_ID=YOUR_DISCORD_APPLICATION_CLIENT_ID
+   ```
+5. Start the app:
+   ```bash
+   python src/main.py
+   ```
+
+## `.env` / `CLIENT_ID` configuration
+- `CLIENT_ID` is required.
+- It must be a valid Discord Application Client ID you want to use as the default RPC app.
+- If `CLIENT_ID` is missing, the app exits with a clear startup error instead of silently skipping RPC.
+
+Optional variables:
+- `UPDATE_INTERVAL` (seconds, default `10`)
+- `STEAM_COOKIE`
+- `TEST_RICH_URL`
+
+## Force Game usage
+1. Open tray menu.
+2. Select **Force Game**.
+3. Pick a configured game/profile.
+4. The app updates Discord presence and (when executable data exists) launches a fake executable process name for Discord detection matching.
+5. Use **Stop Current Presence** to stop forced mode and clear/idle according to settings.
+
+## Steam cookie integration (high level)
+- The app can retrieve a Steam cookie via Edge WebDriver flow.
+- Cookie is stored in `.env` for reuse.
+- Steam scraper uses that cookie to fetch Rich Presence text and party/group data for supported games.
+- If Steam data is available, it is used to enrich Discord presence fields.
+
+## Build / packaging
+If you package this app (for example with PyInstaller), ensure:
+- `tools/dumb.exe`, `tools/msedgedriver.exe`, `assets/`, `lang/`, and `config/` resources are included.
+- `.env` is placed next to the executable or otherwise discoverable by runtime.
+
+This repository currently focuses on source execution; packaging steps may vary by your build pipeline.
+
+## Disclaimer about fake executable mode
+The fake executable mode is intended for **Discord detection testing** and manual presence control workflows. Use responsibly and only in environments where this behavior is acceptable.
