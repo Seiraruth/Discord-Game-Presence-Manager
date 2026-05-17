@@ -66,10 +66,10 @@ def get_lang_from_registry(default="en"):
     elif IS_MACOS:
         try:
             # Try reading from macOS defaults
-            # defaults read com.nvidia.geforcenow lang
+            # defaults read com.discordpresencemanager lang
             # Note: This assumes the app stores it there, or we check system lang
             result = subprocess.run(
-                ["defaults", "read", "com.nvidia.geforcenow", "lang"],
+                ["defaults", "read", "com.discordpresencemanager", "lang"],
                 capture_output=True, text=True
             )
             if result.returncode == 0:
@@ -116,7 +116,7 @@ def set_autostart_windows(enable: bool):
     else:
         # Modo desarrollo
         target_path = sys.executable
-        script_path = str(Path(__file__).resolve().parent.parent.parent / "src" / "DiscordPresenceManager.py")
+        script_path = str(Path(__file__).resolve().parent.parent.parent / "src" / "main.py")
         arguments = f'"{script_path}" --delay 60'
         
     try:
@@ -139,7 +139,7 @@ def set_autostart_windows(enable: bool):
             with winshell.shortcut(shortcut_path) as shortcut:
                 shortcut.path = target_path
                 shortcut.arguments = arguments
-                shortcut.description = "Start GeForce NOW Rich Presence"
+                shortcut.description = "Start Discord Presence Manager"
             logger.info("✅ Acceso directo creado en shell:startup para iniciar con Windows (retraso 60s).")
         else:
             # Eliminar el acceso directo
@@ -180,7 +180,7 @@ STEAM_COOKIE=''
         else:
             appdata = Path.home() / ".config"
             
-        appdir = appdata / "geforce_presence"
+        appdir = appdata / "discord_presence_manager"
         appdir.mkdir(parents=True, exist_ok=True)
         alt = appdir / ".env"
         if not alt.exists():
@@ -194,7 +194,7 @@ def ensure_driver_executable(src_path: Path) -> str:
         if not src_path.exists():
             logger.warning(f"Driver no encontrado en recursos: {src_path}")
             return str(src_path) 
-        tmpdir = Path(tempfile.gettempdir()) / "geforce_driver"
+        tmpdir = Path(tempfile.gettempdir()) / "discord_presence_driver"
         tmpdir.mkdir(parents=True, exist_ok=True)
         dest = tmpdir / src_path.name
         shutil.copy2(str(src_path), str(dest))

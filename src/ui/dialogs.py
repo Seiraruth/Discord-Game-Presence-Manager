@@ -126,7 +126,7 @@ class GamingMessageBox(QDialog):
     def __init__(self, title, text, icon_type="info", parent=None):
         super().__init__(parent)
         self.setWindowTitle(title)
-        self.setWindowIcon(QIcon(str(ASSETS_DIR / "geforce.ico")))
+        self.setWindowIcon(QIcon(str(ASSETS_DIR / "discord.png")))
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
         self.setStyleSheet(GAMING_STYLESHEET)
         
@@ -188,7 +188,7 @@ class GamingInputDialog(QDialog):
     def __init__(self, title, label_text, value=0, min_val=0, max_val=100, step=1, parent=None):
         super().__init__(parent)
         self.setWindowTitle(title)
-        self.setWindowIcon(QIcon(str(ASSETS_DIR / "geforce.ico")))
+        self.setWindowIcon(QIcon(str(ASSETS_DIR / "discord.png")))
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
         self.setStyleSheet(GAMING_STYLESHEET)
         
@@ -241,7 +241,7 @@ class AskGameDialog(QDialog):
         super().__init__(parent)
 
         self.setWindowTitle(title)
-        self.setWindowIcon(QIcon(str(ASSETS_DIR / "geforce.ico")))
+        self.setWindowIcon(QIcon(str(ASSETS_DIR / "discord.png")))
         self.setFixedSize(460, 280) # Increased size for better layout
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
 
@@ -300,14 +300,6 @@ class AskGameDialog(QDialog):
         layout.addLayout(btn_layout)
         self.setLayout(layout)
 
-        # ---- 🎞️ ANIMATED BACKGROUND ----
-        self.bg_label = QLabel(self)
-        self.gif = QMovie(str(ASSETS_DIR / "gfn2.mp4"))
-        self.bg_label.setMovie(self.gif)
-        self.bg_label.setScaledContents(True)
-        self.gif.start()
-        
-        self.bg_label.lower()
 
     def resizeEvent(self, event):
         if hasattr(self, 'bg_label'):
@@ -332,7 +324,7 @@ class QuestListDialog(QDialog):
         super().__init__(parent)
         self.pm = presence_manager
         self.setWindowTitle("Discord Quest Mode - Active Games")
-        self.setWindowIcon(QIcon(str(ASSETS_DIR / "geforce.ico")))
+        self.setWindowIcon(QIcon(str(ASSETS_DIR / "discord.png")))
         self.setMinimumWidth(450)
         self.setMinimumHeight(400)
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
@@ -524,7 +516,7 @@ class MatchSelectionDialog(QDialog):
 
         title_text = TEXTS.get("match_title", "Coincidencias para: {busqueda}").replace("{busqueda}", game_key)
         self.setWindowTitle(title_text)
-        self.setWindowIcon(QIcon(str(ASSETS_DIR / "geforce.ico")))
+        self.setWindowIcon(QIcon(str(ASSETS_DIR / "discord.png")))
         self.setMinimumWidth(540)
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
 
@@ -633,7 +625,7 @@ class CustomPresenceDialog(QDialog):
     def __init__(self, game_name, current_data, parent=None):
         super().__init__(parent)
         self.setWindowTitle(f"Custom Presence: {game_name}")
-        self.setWindowIcon(QIcon(str(ASSETS_DIR / "geforce.ico")))
+        self.setWindowIcon(QIcon(str(ASSETS_DIR / "discord.png")))
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
         self.setStyleSheet(GAMING_STYLESHEET)
         
@@ -734,7 +726,7 @@ class AboutDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle(TEXTS.get("about", "About"))
-        self.setWindowIcon(QIcon(str(ASSETS_DIR / "geforce.ico")))
+        self.setWindowIcon(QIcon(str(ASSETS_DIR / "discord.png")))
         self.setFixedSize(400, 250)
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
         self.setStyleSheet(GAMING_STYLESHEET)
@@ -744,7 +736,7 @@ class AboutDialog(QDialog):
         layout.setSpacing(15)
         
         # Title
-        title = QLabel("GeForce NOW Rich Presence")
+        title = QLabel("Discord Presence Manager")
         title.setObjectName("title_label")
         title.setAlignment(Qt.AlignCenter)
         layout.addWidget(title)
@@ -763,7 +755,7 @@ class AboutDialog(QDialog):
         icons_layout.setSpacing(30)
         icons_layout.setAlignment(Qt.AlignCenter)
         
-        github_icon = ClickableIconLabel("github.png", "https://github.com/KarmaDevz/GeForce-NOW-Rich-Presence", self)
+        github_icon = ClickableIconLabel("github.png", "https://github.com/KarmaDevz/Discord-Game-Presence-Manager", self)
         discord_icon = ClickableIconLabel("discord.png", "https://discord.com/users/karmadevz", self)
         paypal_icon = ClickableIconLabel("paypal.png", "https://www.paypal.com/paypalme/KarmaDevz", self)
         
@@ -793,87 +785,4 @@ class AboutDialog(QDialog):
     def open_url(self, url):
         import webbrowser
         webbrowser.open(url)
-
-class GFNRepairDialog(QDialog):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setWindowTitle(TEXTS.get("repair_title", "Repairing GeForce NOW"))
-        self.setWindowIcon(QIcon(str(ASSETS_DIR / "geforce.ico")))
-        self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
-        self.setFixedSize(450, 180)
-        self.setStyleSheet(GAMING_STYLESHEET)
-        
-        layout = QVBoxLayout()
-        layout.setContentsMargins(25, 25, 25, 25)
-        layout.setSpacing(15)
-        
-        # Title
-        title_lbl = QLabel(TEXTS.get("repair_title", "Repairing GeForce NOW"))
-        title_lbl.setObjectName("title_label")
-        title_lbl.setAlignment(Qt.AlignCenter)
-        layout.addWidget(title_lbl)
-        
-        # Status text
-        self.status_lbl = QLabel(TEXTS.get("repair_status_init", "Starting repair..."))
-        self.status_lbl.setAlignment(Qt.AlignCenter)
-        self.status_lbl.setStyleSheet("color: #cfcfcf;")
-        layout.addWidget(self.status_lbl)
-        
-        # Progress Bar
-        from PyQt5.QtWidgets import QProgressBar
-        self.progress = QProgressBar()
-        self.progress.setRange(0, 100)
-        self.progress.setValue(0)
-        self.progress.setTextVisible(True)
-        self.progress.setAlignment(Qt.AlignCenter)
-        self.progress.setStyleSheet("""
-            QProgressBar {
-                background-color: #1a1b1d;
-                border: 1px solid #2c2f33;
-                border-radius: 6px;
-                color: #ffffff;
-                font-weight: bold;
-                text-align: center;
-                height: 22px;
-            }
-            QProgressBar::chunk {
-                background-color: #045D0E;
-                border-radius: 4px;
-            }
-        """)
-        layout.addWidget(self.progress)
-        
-        # Button layout (Hidden until error or done)
-        self.btn_layout = QHBoxLayout()
-        self.ok_btn = QPushButton(TEXTS.get("close", "Close"))
-        self.ok_btn.clicked.connect(self.accept)
-        self.ok_btn.setVisible(False)
-        self.btn_layout.addStretch()
-        self.btn_layout.addWidget(self.ok_btn)
-        self.btn_layout.addStretch()
-        
-        layout.addLayout(self.btn_layout)
-        self.setLayout(layout)
-
-    def on_progress(self, percent):
-        self.progress.setValue(percent)
-
-    def on_status(self, lang_key):
-        self.status_lbl.setText(TEXTS.get(lang_key, lang_key))
-
-    def on_error(self, err_msg):
-        self.progress.setStyleSheet("""
-            QProgressBar { background-color: #1a1b1d; border: 1px solid #d32f2f; border-radius: 6px; color: #ffffff; text-align: center; height: 22px; }
-            QProgressBar::chunk { background-color: #d32f2f; border-radius: 4px; }
-        """)
-        msg = TEXTS.get("repair_status_error", "Error: {error}").replace("{error}", err_msg)
-        self.status_lbl.setText(msg)
-        self.status_lbl.setStyleSheet("color: #ff5252; font-weight: bold;")
-        self.ok_btn.setVisible(True)
-
-    def on_finished(self):
-        self.status_lbl.setText(TEXTS.get("repair_status_done", "Repair completed."))
-        self.status_lbl.setStyleSheet("color: #00e676; font-weight: bold;")
-        self.progress.setValue(100)
-        self.ok_btn.setVisible(True)
 

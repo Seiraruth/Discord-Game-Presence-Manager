@@ -124,7 +124,7 @@ GAMING_STYLESHEET = """
 
 logger = logging.getLogger('discord_presence_manager')
 
-GITHUB_RELEASES_URL = "https://api.github.com/repos/KarmaDevz/GeForce-NOW-Rich-Presence/releases/latest"
+GITHUB_RELEASES_URL = "https://api.github.com/repos/KarmaDevz/Discord-Game-Presence-Manager/releases/latest"
 
 def parse_version(v_str):
     """Simple semantic version parser (e.g., '1.0.0' -> (1, 0, 0))"""
@@ -192,7 +192,7 @@ class UpdateWorker(QThread):
             total_size = int(response.headers.get('content-length', 0))
             downloaded_size = 0
             
-            tmp_dir = Path(tempfile.gettempdir()) / "geforce_update"
+            tmp_dir = Path(tempfile.gettempdir()) / "discord_presence_update"
             tmp_dir.mkdir(parents=True, exist_ok=True)
             installer_path = tmp_dir / "installer.exe"
 
@@ -217,7 +217,7 @@ class UpdateDialog(QDialog):
         self.version = version
         self.url = url
         self.setWindowTitle(t.get("update_available_title", "Update Available"))
-        self.setWindowIcon(QIcon(str(ASSETS_DIR / "geforce.ico")))
+        self.setWindowIcon(QIcon(str(ASSETS_DIR / "discord.png")))
         self.setFixedSize(400, 300)
         self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
         self.setStyleSheet(GAMING_STYLESHEET)

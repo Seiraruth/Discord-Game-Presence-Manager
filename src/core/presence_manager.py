@@ -358,31 +358,30 @@ class PresenceManager(QObject):
                 self._connected_client_id = None
 
     def stop_force_game(self):
-        """Detiene el forzado de juego y vuelve a la detección automática"""
-        if self.forced_game:
-            forced_game_name = self.forced_game.get('name', 'Unknown')
-            logger.info(f"🧹 Deteniendo forzado de juego: {forced_game_name}")
-            
-            self._last_forced_game = self.forced_game.copy()
-            self.forced_game = None
-            self.last_game = None
-            
-            logger.debug("🧹close_fake_executable desde stop_force_game")
-            self.close_fake_executable()
-            
-            try:
-                if self.rpc:
+        """Stop forced game and return to idle/clear behavior only."""
+        if not self.forced_game:
+            return
+
+        forced_game_name = self.forced_game.get('name', 'Unknown')
+        logger.info(f"🧹 Deteniendo forzado de juego: {forced_game_name}")
+        self._last_forced_game = self.forced_game.copy()
+        self.forced_game = None
+        self.last_game = None
+        self.current_game_start_time = None
+
+        self.close_fake_executable()
+
+        try:
+            if self.rpc:
+                if self.keep_alive:
+                    self._set_idle_presence()
+                else:
                     self.rpc.clear()
-                    self.rpc.close()
-            except Exception:
-                pass
-            
-            self.client_id = "1095416975028650046"  # Client ID por defecto
-            self._connect_rpc(self.client_id)
-            
-            self._force_stop_time = time.time()
-            
-            logger.info("🔄 Volviendo a detección automática de juegos")
+        except Exception as e:
+            logger.debug(f"Error limpiando RPC en stop_force_game: {e}")
+
+        self._force_stop_time = time.time()
+        logger.info("✅ Forzado de juego detenido sin fallback automático.")
 
     def _disconnect_rpc_temporarily(self):
         try:
@@ -711,7 +710,7 @@ class PresenceManager(QObject):
         if self._http_session is None:
             import requests
             self._http_session = requests.Session()
-            self._http_session.headers.update({"User-Agent": "GeForcePresence/1.0"})
+            self._http_session.headers.update({"User-Agent": "DiscordPresenceManager/1.0"})
         return self._http_session
 
     def _fetch_discord_apps_cached(self, force_download: bool = False):
