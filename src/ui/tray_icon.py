@@ -2,6 +2,12 @@ import os
 import logging
 import threading
 import time
+import subprocess
+import sys
+try:
+    import sip
+except ImportError:
+    sip = None
 from PyQt5.QtWidgets import QSystemTrayIcon, QMenu, QAction, QApplication, QMessageBox, QProgressDialog
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt
@@ -161,17 +167,41 @@ class SystemTrayIcon(QSystemTrayIcon):
         if reason == QSystemTrayIcon.DoubleClick:
             self.open_game_picker()
 
-
-    def open_game_picker(self):
+    def _is_picker_deleted(self):
+        """Return True when the current picker wrapper is missing or deleted."""
         if self.game_picker_window is None:
-            self.game_picker_window = GamePickerWindow(self.pm, self.config_manager, tray_icon=self)
-        elif not self.game_picker_window.isVisible() and self.game_picker_window.parent() is None:
-            # keep single instance but recover if somehow detached/invalid
-            self.game_picker_window = GamePickerWindow(self.pm, self.config_manager, tray_icon=self)
+            return True
+        if sip is not None:
+            try:
+                return sip.isdeleted(self.game_picker_window)
+            except Exception:
+                return False
+        return False
+
+    def _create_picker_window(self):
+        """Create a fresh picker instance and bind tray integration."""
+        self.game_picker_window = GamePickerWindow(self.pm, self.config_manager, tray_icon=self)
+
+    def _show_and_activate_picker(self):
+        """Refresh and focus the existing picker instance."""
         self.game_picker_window.refresh_state_on_open()
         self.game_picker_window.show()
         self.game_picker_window.raise_()
         self.game_picker_window.activateWindow()
+
+    def open_game_picker(self):
+        """
+        Reuse picker by default; recreate only when missing/deleted
+        or if Qt raises RuntimeError during show/activate.
+        """
+        if self.game_picker_window is None or self._is_picker_deleted():
+            self._create_picker_window()
+        try:
+            self._show_and_activate_picker()
+        except RuntimeError as exc:
+            logger.debug("Existing picker invalid during show/focus; recreating: %s", exc)
+            self._create_picker_window()
+            self._show_and_activate_picker()
 
     def toggle_start_windows(self, checked):
         self.config_manager.set_setting("start_with_windows", checked)
@@ -343,6 +373,49 @@ class SystemTrayIcon(QSystemTrayIcon):
             self.showMessage(TEXTS.get("cookie_title", "Cookie"), TEXTS.get("cookie_saved", "Cookie saved"), QSystemTrayIcon.Information, 3000)
         else:
             self.showMessage(TEXTS.get("cookie_title", "Cookie"), TEXTS.get("cookie_invalid", "Cookie invalid"), QSystemTrayIcon.Warning, 3000)
+
+    def open_logs(self):
+        try:
+            log_path = LOG_FILE
+            log_path.parent.mkdir(parents=True, exist_ok=True)
+            if not log_path.exists():
+                log_path.touch()
+            if os.name == "nt":
+                os.startfile(str(log_path))
+            elif sys.platform == "darwin":
+                subprocess.Popen(["open", str(log_path)])
+            else:
+                subprocess.Popen(["xdg-open", str(log_path)])
+        except Exception as exc:
+            logger.error("Failed to open logs: %s", exc)
+            GamingMessageBox.show_warning(None, "Logs", f"Could not open logs: {exc}")
+
+    def open_about(self):
+        try:
+            dlg = AboutDialog()
+            dlg.exec_()
+        except Exception as exc:
+            logger.error("Failed to open about dialog: %s", exc)
+            GamingMessageBox.show_warning(None, "About", f"Could not open About dialog: {exc}")
+
+    def open_custom_presence_dialog(self):
+        try:
+            active_game = self.pm.forced_game or self.pm.last_game
+            if not active_game:
+                GamingMessageBox.show_warning(None, "Custom Presence", "No active game selected.")
+                return
+            game_name = active_game.get("name", "Unknown")
+            dlg = CustomPresenceDialog(game_name, active_game)
+            if dlg.exec_() == QDialog.Accepted and getattr(dlg, "result_data", None):
+                ok = self.pm.set_custom_presence(dlg.result_data)
+                if ok:
+                    GamingMessageBox.show_info(None, "Custom Presence", "Custom presence saved.")
+                    self.update_menu()
+                else:
+                    GamingMessageBox.show_warning(None, "Custom Presence", "Could not save custom presence.")
+        except Exception as exc:
+            logger.error("Failed to open custom presence dialog: %s", exc)
+            GamingMessageBox.show_warning(None, "Custom Presence", f"Could not open custom presence dialog: {exc}")
 
     def on_match_selection_requested(self, game_key, candidates):
         # This is called from PresenceManager when it finds a new game and needs user input

@@ -1,7 +1,8 @@
 import difflib
 import logging
+import time
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from PyQt5.QtCore import Qt, QTimer, QSize, QRunnable, QThreadPool, pyqtSignal, QObject
 from PyQt5.QtGui import QPixmap, QPainter, QColor
@@ -46,9 +47,16 @@ class GamePickerWindow(QDialog):
         self.recent = config_manager.get_setting("recent_forced_games", []) or []
         self.entries: List[GameEntry] = []
         self._by_name: Dict[str, GameEntry] = {}
-        self._cover_cache: Dict[str, object] = {}
+        self._icon_cache: Dict[Tuple[str, str, str], object] = {}
         self._visible_keys = set()
-        self._cover_jobs_inflight = set()
+        self._in_flight_art = set()
+        self._last_games_signature = None
+        self._max_visible_results = int(self.config_manager.get_setting("game_picker_max_visible_results", 120) or 120)
+        self._pending_cover_items = []
+        self._discord_entries_loaded = False
+        self._covers_timer = QTimer(self)
+        self._covers_timer.setInterval(100)
+        self._covers_timer.timeout.connect(self._process_cover_batch)
 
         self.setWindowTitle("Force Game")
         self.resize(980, 700)
@@ -58,7 +66,7 @@ class GamePickerWindow(QDialog):
         lay.addWidget(QLabel("<h2>Force Game</h2>"))
         self.search = QLineEdit(); self.search.setPlaceholderText("Search games...")
         lay.addWidget(self.search)
-        self.status = QLabel("Active game: none")
+        self.status = QLabel("Loading games...")
         lay.addWidget(self.status)
         self.results_status = QLabel("Showing 0 of 0")
         lay.addWidget(self.results_status)
@@ -88,22 +96,42 @@ class GamePickerWindow(QDialog):
         self.sync_btn.clicked.connect(self.sync_games)
         self.refresh_btn.clicked.connect(self.refresh_covers)
         self.close_btn.clicked.connect(self.close)
+        if hasattr(self.pm, "sync_finished"):
+            self.pm.sync_finished.connect(self._on_sync_finished)
 
-        self.load_games()
+        logger.debug("Game picker UI constructed")
+        QTimer.singleShot(0, self.initial_load)
+
+    def initial_load(self):
+        self.status.setText("Loading games...")
+        t0 = time.perf_counter()
+        self.load_local_games()
+        logger.debug("Game picker loaded %s local games in %.2fs", len(self.entries), time.perf_counter() - t0)
         self.apply_filter()
         self.refresh_state_on_open()
+        QTimer.singleShot(50, self.load_discord_cache_async)
 
-    def load_games(self):
+    def load_local_games(self):
         self.entries = []
+        self._by_name = {}
         gm = self.pm.games_map or {}
         for name, data in gm.items():
             e = GameEntry(name=name, id=str(data.get("client_id") or ""), executable_path=data.get("executable_path") or "", steam_appid=str(data.get("steam_appid") or ""), source="Local")
             self.entries.append(e); self._by_name[name.lower()] = e
+        self._last_games_signature = self._games_signature()
+
+    def load_discord_cache_async(self):
+        if self._discord_entries_loaded:
+            return
+        t0 = time.perf_counter()
         for d in self.pm._fetch_discord_apps_cached(force_download=False) or []:
             name = d.get("name")
             if name and name.lower() not in self._by_name:
                 e = GameEntry(name=name, id=str(d.get("id") or ""), source="Discord")
                 self.entries.append(e); self._by_name[name.lower()] = e
+        self._discord_entries_loaded = True
+        logger.debug("Game picker loaded discord cache entries in %.2fs (total entries=%s)", time.perf_counter() - t0, len(self.entries))
+        self.apply_filter()
 
     def _rank(self, name, q):
         n, ql = name.lower(), q.lower()
@@ -117,24 +145,44 @@ class GamePickerWindow(QDialog):
 
     def apply_filter(self):
         q = self.search.text().strip()
-        ranked = sorted(self.entries, key=lambda e: self._rank(e.name, q), reverse=True)
+        t0 = time.perf_counter()
+        ranked = []
+        for e in self.entries:
+            score = self._rank(e.name, q)
+            if q and score < 35:
+                continue
+            ranked.append((score, e))
+        ranked.sort(key=lambda x: x[0], reverse=True)
         total = len(self.entries)
         self.list.clear()
         shown = 0
         self._visible_keys = set()
-        for e in ranked[:300]:
-            if q and self._rank(e.name, q) < 35: continue
+        self._pending_cover_items = []
+        for _, e in ranked[:self._max_visible_results]:
             item = QListWidgetItem(f"{e.name}\n{e.source}")
             item.setData(Qt.UserRole, e)
-            key = e.name.lower()
+            key = self._entry_key(e)
             self._visible_keys.add(key)
-            cached_icon = self._cover_cache.get(key)
+            cached_icon = self._icon_cache.get(key)
             item.setIcon(cached_icon if cached_icon else self._placeholder_icon(e.name))
             self.list.addItem(item)
             shown += 1
             if not cached_icon:
-                self._queue_cover(item, e)
+                self._pending_cover_items.append((item, e))
         self.results_status.setText(f"Showing {shown} of {total}")
+        logger.debug("Game picker apply_filter done in %.2fs (shown=%s total=%s)", time.perf_counter() - t0, shown, total)
+        if self._pending_cover_items and not self._covers_timer.isActive():
+            self._covers_timer.start()
+
+    def _process_cover_batch(self):
+        t0 = time.perf_counter()
+        batch = self._pending_cover_items[:12]
+        self._pending_cover_items = self._pending_cover_items[12:]
+        for item, entry in batch:
+            self._queue_cover(item, entry)
+        if not self._pending_cover_items:
+            self._covers_timer.stop()
+        logger.debug("Game picker queued %s cover jobs in %.3fs", len(batch), time.perf_counter() - t0)
 
     def _placeholder_icon(self, name):
         pix = QPixmap(160, 220); pix.fill(QColor("#2b2d31"))
@@ -143,34 +191,39 @@ class GamePickerWindow(QDialog):
         return QIcon(pix)
 
     def _queue_cover(self, item, entry):
-        key = entry.name.lower()
-        if key in self._cover_jobs_inflight:
+        key = self._entry_key(entry)
+        cached_icon = self._icon_cache.get(key)
+        if cached_icon:
+            item.setIcon(cached_icon)
             return
-        self._cover_jobs_inflight.add(key)
+        if key in self._in_flight_art:
+            return
+        self._in_flight_art.add(key)
         signals = WorkerSignals()
         signals.done.connect(lambda game, path, it=item, k=key: self._set_cover(it, path, game, k))
         self.thread_pool.start(ArtJob(self.resolver, entry.__dict__, signals))
 
     def _set_cover(self, item, path, game, key):
-        self._cover_jobs_inflight.discard(key)
+        self._in_flight_art.discard(key)
         if not path: return
         pix = QPixmap(str(path))
         if pix.isNull(): return
         from PyQt5.QtGui import QIcon
         icon = QIcon(pix.scaled(160,220,Qt.KeepAspectRatioByExpanding,Qt.SmoothTransformation))
-        self._cover_cache[key] = icon
+        self._icon_cache[key] = icon
         if key not in self._visible_keys:
             return
         row = self.list.row(item)
         if row < 0:
             return
         e = item.data(Qt.UserRole)
-        if not e or e.name.lower() != key:
+        if not e or self._entry_key(e) != key:
             return
         item.setIcon(icon)
 
     def force_from_item(self, item, minimize=False):
         if self.tray_icon is None:
+            logger.error("Tray integration unavailable in force_from_item; cannot force game.")
             QMessageBox.warning(self, "Force Game", "Tray integration is unavailable. Cannot force game from picker.")
             return
         e: GameEntry = item.data(Qt.UserRole)
@@ -196,7 +249,13 @@ class GamePickerWindow(QDialog):
         self.status.setText("Active game: none")
 
     def refresh_covers(self):
-        self._cover_cache.clear()
+        self._icon_cache.clear()
+        self._in_flight_art.clear()
+        if hasattr(self.resolver, "clear_cache"):
+            try:
+                self.resolver.clear_cache()
+            except Exception:
+                logger.exception("Failed to clear art resolver cache safely")
         self.apply_filter()
 
     def sync_games(self):
@@ -204,16 +263,47 @@ class GamePickerWindow(QDialog):
             QMessageBox.warning(self, "Force Game", "Tray integration is unavailable. Sync cannot be started.")
             return
         self.tray_icon.sync_games()
-        self.load_games()
-        self.apply_filter()
+
+    def _on_sync_finished(self, updated, total):
+        del updated, total
+        self.refresh_state_on_open()
 
     def refresh_state_on_open(self):
-        forced = self.pm.forced_game or {}
-        self.status.setText(f"Active game: {forced.get('name', 'none')}")
-        if self.config_manager.get_setting("remember_window_size", True):
-            size = self.config_manager.get_setting("game_picker_size", [])
-            if isinstance(size, list) and len(size) == 2:
-                self.resize(size[0], size[1])
+        try:
+            active = self.pm.forced_game or self.pm.last_game or {}
+            self.status.setText(f"Active game: {active.get('name', 'none')}")
+        except Exception:
+            logger.exception("Failed to refresh active game status")
+            self.status.setText("Active game: none")
+
+        try:
+            self.recent = self.config_manager.get_setting("recent_forced_games", []) or []
+        except Exception:
+            logger.exception("Failed to reload recent games")
+            self.recent = []
+
+        try:
+            if self._games_signature() != self._last_games_signature:
+                self.load_local_games()
+                self._discord_entries_loaded = False
+                QTimer.singleShot(50, self.load_discord_cache_async)
+        except Exception:
+            logger.exception("Failed to detect/reload changed game map")
+
+        try:
+            self.apply_filter()
+        except Exception:
+            logger.exception("Failed to apply filter during refresh_state_on_open")
+
+        try:
+            if self.config_manager.get_setting("remember_window_size", True):
+                size = self.config_manager.get_setting("game_picker_size", [])
+                if isinstance(size, list) and len(size) == 2:
+                    w, h = int(size[0]), int(size[1])
+                    if 600 <= w <= 3840 and 400 <= h <= 2160:
+                        self.resize(w, h)
+        except Exception:
+            logger.exception("Failed to restore remembered game picker size")
 
     def keyPressEvent(self, ev):
         if ev.key() == Qt.Key_Escape:
@@ -226,7 +316,14 @@ class GamePickerWindow(QDialog):
         if self.config_manager.get_setting("remember_window_size", True):
             self.config_manager.set_setting("game_picker_size", [self.width(), self.height()])
         if self.config_manager.get_setting("minimize_to_tray_on_close", True):
-            ev.accept()
+            ev.ignore()
             self.hide()
             return
         super().closeEvent(ev)
+
+    def _entry_key(self, entry: GameEntry) -> Tuple[str, str, str]:
+        return (entry.name.lower().strip(), str(entry.steam_appid or "").strip(), str(entry.id or "").strip())
+
+    def _games_signature(self):
+        gm = self.pm.games_map or {}
+        return tuple(sorted((k.lower(), str((v or {}).get("client_id") or ""), str((v or {}).get("steam_appid") or "")) for k, v in gm.items()))
