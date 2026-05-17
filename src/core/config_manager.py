@@ -8,11 +8,11 @@ try:
     LANG = get_lang_from_registry()
     TEXTS = load_locale(LANG)
 except Exception:
-    LANG = os.getenv('GEFORCE_LANG', 'en')
+    LANG = os.getenv('DISCORD_PRESENCE_LANG', 'en')
     TEXTS = load_locale(LANG)
 
 
-logger = logging.getLogger('geforce_presence')
+logger = logging.getLogger('discord_presence_manager')
 
 class ConfigManager:
     def __init__(self, config_path_file: Path):
@@ -21,9 +21,10 @@ class ConfigManager:
         self.games_config_path: Optional[Path] = None
         self.app_settings: Dict = {
             "start_with_windows": False,
-            "start_gfn_on_launch": False,
-            "start_discord_on_launch": False,
-            "get_cookie_on_launch": False
+                        "start_discord_on_launch": False,
+            "get_cookie_on_launch": False,
+            "idle_presence_enabled": False,
+            "clear_presence_when_idle": True
         }
         self.app_settings_path = CONFIG_DIR / "app_settings.json"
         self._load()

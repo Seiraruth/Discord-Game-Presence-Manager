@@ -18,7 +18,7 @@ from selenium.common.exceptions import WebDriverException
 
 from src.core.utils import save_cookie_to_env, DRIVER_PATH, ensure_driver_executable, ENV_PATH, IS_WINDOWS, IS_MACOS, IS_LINUX
 
-logger = logging.getLogger('geforce_presence')
+logger = logging.getLogger('discord_presence_manager')
 
 class CookieManager:
     def __init__(self, texts: Dict, env_cookie: Optional[str] = None, test_url: str = ""):

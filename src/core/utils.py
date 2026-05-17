@@ -21,7 +21,7 @@ IS_LINUX = sys.platform.startswith("linux")
 if IS_WINDOWS:
     import winreg
 
-logger = logging.getLogger('geforce_presence')
+logger = logging.getLogger('discord_presence_manager')
 
 def resource_path(*parts):
     if getattr(sys, "frozen", False):
@@ -45,19 +45,19 @@ elif IS_MACOS:
 else:
     DRIVER_PATH = resource_path("tools", "msedgedriver_linux")
 
-LOG_FILE = LOGS_DIR / "geforce_presence.log"
+LOG_FILE = LOGS_DIR / "discord_presence_manager.log"
 ENV_PATH = resource_path(".env")
 DISCORD_CACHE_PATH = CONFIG_DIR / "discord_apps_cache.json"
 DISCORD_DETECTABLE_URL = "https://discord.com/api/v9/applications/detectable"
 DISCORD_CACHE_TTL = 60 * 60 * 24  # 1 day
 DISCORD_AUTO_APPLY_THRESHOLD = 0.85
 DISCORD_ASK_TIMEOUT = 10
-LOCK_FILE = Path(tempfile.gettempdir()) / "geforce_presence.lock"
+LOCK_FILE = Path(tempfile.gettempdir()) / "discord_presence_manager.lock"
 
 def get_lang_from_registry(default="en"):
     if IS_WINDOWS:
         try:
-            key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\GeForcePresence")
+            key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\DiscordPresenceManager")
             lang, _ = winreg.QueryValueEx(key, "lang")
             winreg.CloseKey(key)
             return _normalize_lang(lang, default)
@@ -105,7 +105,7 @@ def set_autostart_windows(enable: bool):
         logger.error("winshell no está instalado o falló su importación.")
         return
 
-    app_name = "GeForceNOWRichPresence"
+    app_name = "DiscordPresenceManager"
     startup_folder = winshell.startup()
     shortcut_path = os.path.join(startup_folder, f"{app_name}.lnk")
     
@@ -116,7 +116,7 @@ def set_autostart_windows(enable: bool):
     else:
         # Modo desarrollo
         target_path = sys.executable
-        script_path = str(Path(__file__).resolve().parent.parent.parent / "src" / "GeForceNOWRichPresence.py")
+        script_path = str(Path(__file__).resolve().parent.parent.parent / "src" / "DiscordPresenceManager.py")
         arguments = f'"{script_path}" --delay 60'
         
     try:

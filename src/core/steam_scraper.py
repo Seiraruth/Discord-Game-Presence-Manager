@@ -4,7 +4,7 @@ import re
 from typing import Optional, Tuple
 from bs4 import BeautifulSoup
 
-logger = logging.getLogger('geforce_presence')
+logger = logging.getLogger('discord_presence_manager')
 
 class SteamScraper: 
     def __init__(self, steam_cookie: Optional[str], test_rich_url: str):

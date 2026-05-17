@@ -1,6 +1,7 @@
 {
     "start_with_windows": false,
-    "start_gfn_on_launch": false,
     "start_discord_on_launch": false,
-    "get_cookie_on_launch": false
+    "get_cookie_on_launch": false,
+    "idle_presence_enabled": false,
+    "clear_presence_when_idle": true
 }

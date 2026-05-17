@@ -2,7 +2,7 @@ import psutil
 import subprocess
 import logging
 
-logger = logging.getLogger('geforce_presence')
+logger = logging.getLogger('discord_presence_manager')
 
 class AppMonitor:
     @staticmethod
@@ -25,9 +25,8 @@ class AppMonitor:
                     logger.error(TEXTS.get("kill_process_error", "⚠️ No se pudo cerrar {name}: {e}"))
 
     @staticmethod
-    def monitor_geforce_and_dumb():
-        if not AppMonitor.is_process_running("GeForceNOW.exe"):
-            AppMonitor.kill_process("dumb.exe")
+    def monitor_fake_and_dumb():
+        return
 
     @staticmethod
     def launch_dumb(path_dumb: str):

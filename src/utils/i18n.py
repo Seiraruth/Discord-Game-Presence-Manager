@@ -18,7 +18,7 @@ LANG_DIR = Path(resource_path("lang"))
 
 def get_lang_from_registry(default="en"):
     try:
-        key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\GeForcePresence")
+        key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\DiscordPresenceManager")
         lang, _ = winreg.QueryValueEx(key, "lang")
         winreg.CloseKey(key)
 
@@ -61,7 +61,7 @@ class Translator:
             self.lang = get_lang_from_registry()
             self.texts = load_locale(self.lang)
         except Exception:
-            self.lang = os.getenv('GEFORCE_LANG', 'en')
+            self.lang = os.getenv('DISCORD_PRESENCE_LANG', 'en')
             self.texts = load_locale(self.lang)
 
     def get(self, key, default=None):

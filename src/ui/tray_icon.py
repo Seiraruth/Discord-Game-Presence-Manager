@@ -7,18 +7,17 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QDialog
 from src.core.utils import ASSETS_DIR, LOG_FILE, set_autostart_windows
 from src.core.app_launcher import AppLauncher
-from src.ui.dialogs import AskGameDialog, MatchSelectionDialog, GamingMessageBox, GamingInputDialog, QuestListDialog, CustomPresenceDialog, AboutDialog, GFNRepairDialog, GAMING_STYLESHEET
+from src.ui.dialogs import AskGameDialog, MatchSelectionDialog, GamingMessageBox, GamingInputDialog, QuestListDialog, CustomPresenceDialog, AboutDialog, GAMING_STYLESHEET
 from src.core.utils import get_lang_from_registry, load_locale
-from src.core.reinstaller import GFNReinstallerWorker
 
 try:
     LANG = get_lang_from_registry()
     TEXTS = load_locale(LANG)
 except Exception:
-    LANG = os.getenv('GEFORCE_LANG', 'en')
+    LANG = os.getenv('DISCORD_PRESENCE_LANG', 'en')
     TEXTS = load_locale(LANG)
 
-logger = logging.getLogger('geforce_presence')
+logger = logging.getLogger('discord_presence_manager')
 
 class SystemTrayIcon(QSystemTrayIcon):
     def __init__(self, presence_manager, texts, config_manager, parent=None):
@@ -27,8 +26,8 @@ class SystemTrayIcon(QSystemTrayIcon):
         self.config_manager = config_manager
         TEXTS = texts
         
-        self.setIcon(QIcon(str(ASSETS_DIR / "geforce.ico")))
-        self.setToolTip("GeForce NOW Presence")
+        self.setIcon(QIcon(str(ASSETS_DIR / "discord.png")))
+        self.setToolTip("Discord Presence Manager")
         
         self.menu = QMenu(parent)
         
@@ -68,12 +67,10 @@ class SystemTrayIcon(QSystemTrayIcon):
         # Connect signals
         try:
             self.pm.request_match_selection.disconnect()
-            self.pm.gfn_error_detected.disconnect()
             self.pm.download_progress.disconnect()
         except:
             pass
         self.pm.request_match_selection.connect(self.on_match_selection_requested)
-        self.pm.gfn_error_detected.connect(self.on_gfn_error_detected)
         self.pm.download_progress.connect(self.on_download_progress)
         self.activated.connect(self.on_activated)
         self.menu.aboutToShow.connect(self.update_menu)
@@ -98,12 +95,6 @@ class SystemTrayIcon(QSystemTrayIcon):
         cookie_action.triggered.connect(self.obtain_cookie)
         self.menu.addAction(cookie_action)
         
-        # Open GeForce
-        open_gf_action = QAction(TEXTS.get("tray_open_geforce", "Open GeForce NOW"), self.menu)
-        open_gf_action.triggered.connect(self.open_geforce)
-        self.menu.addAction(open_gf_action)
-        
-
 
         # Custom Presence (Only if game active)
         active_game = self.pm.forced_game or self.pm.last_game
@@ -125,11 +116,6 @@ class SystemTrayIcon(QSystemTrayIcon):
         start_win_action.triggered.connect(self.toggle_start_windows)
         config_menu.addAction(start_win_action)
 
-        # 2. Iniciar GeForce NOW
-        start_gfn_action = QAction(TEXTS.get("config_start_gfn", "Iniciar GeForce NOW con la aplicación"), self.menu, checkable=True)
-        start_gfn_action.setChecked(self.config_manager.get_setting("start_gfn_on_launch", False))
-        start_gfn_action.triggered.connect(lambda chk: self.config_manager.set_setting("start_gfn_on_launch", chk))
-        config_menu.addAction(start_gfn_action)
 
         # 3. Iniciar Discord
         start_discord_action = QAction(TEXTS.get("config_start_discord", "Iniciar Discord con la aplicación"), self.menu, checkable=True)
@@ -173,7 +159,7 @@ class SystemTrayIcon(QSystemTrayIcon):
 
     def on_activated(self, reason):
         if reason == QSystemTrayIcon.DoubleClick:
-            self.open_geforce()
+            self.toggle_force_game()
 
     def toggle_start_windows(self, checked):
         self.config_manager.set_setting("start_with_windows", checked)
@@ -385,33 +371,6 @@ class SystemTrayIcon(QSystemTrayIcon):
         else:
             self.showMessage(TEXTS.get("cookie_title", "Cookie"), TEXTS.get("cookie_invalid", "Cookie invalid"), QSystemTrayIcon.Warning, 3000)
 
-    def open_geforce(self):
-        AppLauncher.launch_geforce_now()
-
-    def open_logs(self):
-        import os
-        if LOG_FILE.exists():
-            os.startfile(LOG_FILE)
-        else:
-            self.showMessage(TEXTS.get("logs_title", "Logs"), TEXTS.get("open_logs_error", "No log file found."), QSystemTrayIcon.Warning, 3000)
-
-    def open_about(self):
-        dlg = AboutDialog()
-        dlg.exec_()
-
-    def open_custom_presence_dialog(self):
-        game = self.pm.forced_game or self.pm.last_game
-        if not game:
-            self.showMessage("Error", "No hay juego activo.", QSystemTrayIcon.Warning)
-            return
-            
-        name = game.get("name", "Unknown")
-        # Pass current custom values if any
-        dlg = CustomPresenceDialog(name, game, parent=None)
-        if dlg.exec_() == QDialog.Accepted and dlg.result_data:
-            self.pm.set_custom_presence(dlg.result_data)
-            self.showMessage("Custom Presence", f"Presencia actualizada para {name}", QSystemTrayIcon.Information, 2000)
-
     def on_match_selection_requested(self, game_key, candidates):
         # This is called from PresenceManager when it finds a new game and needs user input
         # We need to run this in the main thread (which signals do automatically)
@@ -514,36 +473,3 @@ class SystemTrayIcon(QSystemTrayIcon):
             self.progress.close()
             self.progress = None
         GamingMessageBox.show_warning(None, "Error de Sincronización", f"Ocurrió un error: {error_msg}")
-
-    def on_gfn_error_detected(self):
-        if self._reinstaller_worker and self._reinstaller_worker.isRunning():
-            return
-        
-        # We create and show the dialog non-modally or modally
-        if self._repair_dialog is None:
-            self._repair_dialog = GFNRepairDialog()
-            
-        self._repair_dialog.show()
-        
-        self._reinstaller_worker = GFNReinstallerWorker()
-        
-        # Connect signals
-        self._reinstaller_worker.started_reinstall.connect(self.on_reinstall_started)
-        self._reinstaller_worker.progress_update.connect(self._repair_dialog.on_progress)
-        self._reinstaller_worker.status_update.connect(self._repair_dialog.on_status)
-        self._reinstaller_worker.error_occurred.connect(self._repair_dialog.on_error)
-        self._reinstaller_worker.error_occurred.connect(self.on_reinstall_error)
-        self._reinstaller_worker.finished_reinstall.connect(self._repair_dialog.on_finished)
-        self._reinstaller_worker.finished_reinstall.connect(self.on_reinstall_finished)
-        
-        self._reinstaller_worker.start()
-
-    def on_reinstall_started(self):
-        self.showMessage("GeForce NOW Error", "Recurso corrupto detectado. Reparando e instalando GFN...", QSystemTrayIcon.Information, 5000)
-
-    def on_reinstall_finished(self):
-        self.showMessage("GeForce NOW Reparado", "GeForce NOW se ha reinstalado correctamente.", QSystemTrayIcon.Information, 5000)
-        AppLauncher.launch_geforce_now()
-
-    def on_reinstall_error(self, err):
-        self.showMessage("Error de Reparación", f"No se pudo reinstalar GFN: {err}", QSystemTrayIcon.Warning, 5000)
