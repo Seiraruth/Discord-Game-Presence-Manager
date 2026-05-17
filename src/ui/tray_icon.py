@@ -181,13 +181,28 @@ class SystemTrayIcon(QSystemTrayIcon):
     def open_game_picker(self):
         if self.game_picker_window is None or self._is_picker_deleted():
             self._create_picker_window()
-        elif not self.game_picker_window.isVisible() and self.game_picker_window.parent() is None:
+        else:
+            try:
+                needs_recreate = (not self.game_picker_window.isVisible() and self.game_picker_window.parent() is None)
+            except RuntimeError as exc:
+                logger.debug("Picker visibility check failed; recreating window: %s", exc)
+                needs_recreate = True
+            if not needs_recreate:
+                self.game_picker_window.refresh_state_on_open()
+                self.game_picker_window.show()
+                self.game_picker_window.raise_()
+                self.game_picker_window.activateWindow()
+                return
             # keep single instance but recover if somehow detached/invalid
             try:
                 self.game_picker_window.close()
                 self.game_picker_window.deleteLater()
-            except RuntimeError:
-                logger.debug("Detached picker cleanup skipped; Qt object already deleted")
+            except RuntimeError as exc:
+                msg = str(exc).lower()
+                if "wrapped c/c++ object" in msg or "deleted" in msg:
+                    logger.debug("Detached picker cleanup skipped; Qt object already deleted")
+                else:
+                    raise
             self._create_picker_window()
         self.game_picker_window.refresh_state_on_open()
         self.game_picker_window.show()
