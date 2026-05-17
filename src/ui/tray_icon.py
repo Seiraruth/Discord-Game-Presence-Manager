@@ -8,7 +8,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QDialog
 from src.core.utils import ASSETS_DIR, LOG_FILE, set_autostart_windows
 from src.core.app_launcher import AppLauncher
-from src.ui.dialogs import AskGameDialog, MatchSelectionDialog, GamingMessageBox, GamingInputDialog, QuestListDialog, CustomPresenceDialog, AboutDialog, GAMING_STYLESHEET
+from src.ui.dialogs import MatchSelectionDialog, GamingMessageBox, GamingInputDialog, CustomPresenceDialog, AboutDialog, GAMING_STYLESHEET
 from src.ui.game_picker_window import GamePickerWindow
 from src.core.utils import get_lang_from_registry, load_locale
 
@@ -151,11 +151,10 @@ class SystemTrayIcon(QSystemTrayIcon):
         
         # Exit
         exit_action = QAction(TEXTS.get("tray_exit", "Exit"), self.menu)
-        exit_action.triggered.connect(QApplication.instance().quit)
+        exit_action.triggered.connect(self.exit_app)
         self.menu.addAction(exit_action)
 
     def update_menu(self):
-        self.game_picker_window = None
         self.create_menu()
 
     def on_activated(self, reason):
@@ -164,11 +163,12 @@ class SystemTrayIcon(QSystemTrayIcon):
 
 
     def open_game_picker(self):
-        if not self.game_picker_window:
+        if self.game_picker_window is None:
             self.game_picker_window = GamePickerWindow(self.pm, self.config_manager, tray_icon=self)
-            size = self.config_manager.get_setting("game_picker_size", [])
-            if isinstance(size, list) and len(size) == 2:
-                self.game_picker_window.resize(size[0], size[1])
+        elif not self.game_picker_window.isVisible() and self.game_picker_window.parent() is None:
+            # keep single instance but recover if somehow detached/invalid
+            self.game_picker_window = GamePickerWindow(self.pm, self.config_manager, tray_icon=self)
+        self.game_picker_window.refresh_state_on_open()
         self.game_picker_window.show()
         self.game_picker_window.raise_()
         self.game_picker_window.activateWindow()
@@ -178,50 +178,11 @@ class SystemTrayIcon(QSystemTrayIcon):
         set_autostart_windows(checked)
 
     def toggle_force_game(self):
-        # 0. Check for running quests
-        if getattr(self.pm, "active_quests", None):
-            dlg = QuestListDialog(self.pm)
-            dlg.set_add_game_callback(self.process_quest_input)
-            dlg.exec_()
-            return
+        self.open_game_picker()
 
-        if self.pm.forced_game:
-            self.pm.stop_force_game()
-            self.showMessage("OK", "Forzado de juego detenido.", QSystemTrayIcon.Information, 3000)
-            self.update_menu()
-            return
-
-        dialog = AskGameDialog(title=TEXTS.get("force_game", "Force Game"), message=TEXTS.get("game_name", "Game Name:"))
-        
-        def on_quest_opened():
-            dialog.reject()
-            dlg = QuestListDialog(self.pm)
-            dlg.set_add_game_callback(self.process_quest_input)
-            dlg.exec_()
-            
-        def on_update_list_opened():
-            self.showMessage("Info", "Actualizando lista de juegos de Discord...", QSystemTrayIcon.Information, 4000)
-            QApplication.processEvents()
-            apps = self.pm._fetch_discord_apps_cached(force_download=True)
-            if apps:
-                self.showMessage("Info", f"Lista de juegos actualizada exitosamente ({len(apps)} apps).", QSystemTrayIcon.Information, 3000)
-            else:
-                self.showMessage("Error", "No se pudo actualizar la lista de juegos de Discord.", QSystemTrayIcon.Warning, 4000)
-
-        dialog.quest_mode_requested.connect(on_quest_opened)
-        dialog.update_list_requested.connect(on_update_list_opened)
-
-        if dialog.exec_() == QDialog.Accepted:
-            game_name = dialog.get_game_name()
-            if not game_name:
-                return
-            
-            # Normal force game
-            self.process_force_game(game_name)
-
-    def process_quest_input(self, game_name):
+    def process_activity_simulator_input(self, game_name):
         """
-        Similar to process_force_game but for quests.
+        Similar to process_force_game but for activity simulator mode.
         Returns True if a game was successfully queued/started.
         """
         # Reuse search logic
@@ -263,14 +224,14 @@ class SystemTrayIcon(QSystemTrayIcon):
             return False
 
         # Show selection dialog
-        sel_dialog = MatchSelectionDialog("Seleccionar Juego (Quest)", options)
+        sel_dialog = MatchSelectionDialog("Select game", options)
         if sel_dialog.exec_() == QDialog.Accepted and sel_dialog.selected_match:
             match = sel_dialog.selected_match
-            self.apply_quest_game(match)
+            self.apply_activity_simulator_game(match)
             return True
         return False
 
-    def apply_quest_game(self, match):
+    def apply_activity_simulator_game(self, match):
         name = match["name"]
         exe = match.get("exe") or f"{name}.exe" # Fallback
         
@@ -485,3 +446,20 @@ class SystemTrayIcon(QSystemTrayIcon):
             self.progress.close()
             self.progress = None
         GamingMessageBox.show_warning(None, "Error de Sincronización", f"Ocurrió un error: {error_msg}")
+    def exit_app(self):
+        try:
+            if self.game_picker_window is not None:
+                self.game_picker_window.hide()
+                self.game_picker_window.deleteLater()
+                self.game_picker_window = None
+        except Exception:
+            pass
+        try:
+            self.pm.stop_monitoring()
+        except Exception:
+            pass
+        try:
+            self.pm.close_fake_executable()
+        except Exception:
+            pass
+        QApplication.instance().quit()

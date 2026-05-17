@@ -1,7 +1,15 @@
 {
-    "start_with_windows": false,
-    "start_discord_on_launch": false,
-    "get_cookie_on_launch": false,
-    "idle_presence_enabled": false,
-    "clear_presence_when_idle": true
+  "start_with_windows": false,
+  "start_discord_on_launch": false,
+  "get_cookie_on_launch": false,
+  "idle_presence_enabled": false,
+  "clear_presence_when_idle": true,
+  "open_game_picker_on_startup": true,
+  "minimize_to_tray_on_close": true,
+  "remember_window_size": true,
+  "show_recent_games_first": true,
+  "enable_game_art_download": true,
+  "steamgriddb_api_key": "",
+  "game_art_cache_days": 30,
+  "recent_forced_games": []
 }

@@ -47,7 +47,10 @@ class ConfigManager:
             data_settings = safe_json_load(self.app_settings_path)
             if isinstance(data_settings, dict):
                 # Update defaults with loaded settings
+                missing_before = set(self.app_settings.keys()) - set(data_settings.keys())
                 self.app_settings.update(data_settings)
+                if missing_before:
+                    save_json(self.app_settings, self.app_settings_path)
         else:
             save_json(self.app_settings, self.app_settings_path)
 
