@@ -2,6 +2,7 @@ import os
 import logging
 import threading
 import time
+import sip
 from PyQt5.QtWidgets import QSystemTrayIcon, QMenu, QAction, QApplication, QMessageBox, QProgressDialog
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt
@@ -163,7 +164,7 @@ class SystemTrayIcon(QSystemTrayIcon):
 
 
     def open_game_picker(self):
-        if self.game_picker_window is None:
+        if self.game_picker_window is None or sip.isdeleted(self.game_picker_window):
             self.game_picker_window = GamePickerWindow(self.pm, self.config_manager, tray_icon=self)
         elif not self.game_picker_window.isVisible() and self.game_picker_window.parent() is None:
             # keep single instance but recover if somehow detached/invalid
