@@ -2,6 +2,10 @@ import os
 import logging
 import threading
 import time
+try:
+    import sip
+except ImportError:
+    sip = None
 from PyQt5.QtWidgets import QSystemTrayIcon, QMenu, QAction, QApplication, QMessageBox, QProgressDialog
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt
@@ -161,17 +165,31 @@ class SystemTrayIcon(QSystemTrayIcon):
         if reason == QSystemTrayIcon.DoubleClick:
             self.open_game_picker()
 
+    def _is_picker_deleted(self):
+        if self.game_picker_window is None:
+            return True
+        if sip is not None:
+            try:
+                return sip.isdeleted(self.game_picker_window)
+            except Exception:
+                return False
+        return False
 
     def open_game_picker(self):
-        if self.game_picker_window is None:
+        if self.game_picker_window is None or self._is_picker_deleted():
             self.game_picker_window = GamePickerWindow(self.pm, self.config_manager, tray_icon=self)
-        elif not self.game_picker_window.isVisible() and self.game_picker_window.parent() is None:
-            # keep single instance but recover if somehow detached/invalid
+        try:
+            self.game_picker_window.refresh_state_on_open()
+            self.game_picker_window.show()
+            self.game_picker_window.raise_()
+            self.game_picker_window.activateWindow()
+        except RuntimeError:
+            logger.warning("Game picker Qt object was invalid at show-time, recreating.")
             self.game_picker_window = GamePickerWindow(self.pm, self.config_manager, tray_icon=self)
-        self.game_picker_window.refresh_state_on_open()
-        self.game_picker_window.show()
-        self.game_picker_window.raise_()
-        self.game_picker_window.activateWindow()
+            self.game_picker_window.refresh_state_on_open()
+            self.game_picker_window.show()
+            self.game_picker_window.raise_()
+            self.game_picker_window.activateWindow()
 
     def toggle_start_windows(self, checked):
         self.config_manager.set_setting("start_with_windows", checked)
