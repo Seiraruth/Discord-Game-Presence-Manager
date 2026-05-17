@@ -310,6 +310,7 @@ class GamePickerWindow(QDialog):
         try:
             return self.list.row(item)
         except RuntimeError:
+            return -1
         self._in_flight_art.discard(key)
         if not path: return
         pix = QPixmap(str(path))
