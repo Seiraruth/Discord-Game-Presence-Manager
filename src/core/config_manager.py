@@ -33,7 +33,8 @@ class ConfigManager:
             "enable_game_art_download": True,
             "steamgriddb_api_key": "",
             "game_art_cache_days": 30,
-            "recent_forced_games": []
+            "recent_forced_games": [],
+            "game_picker_max_visible_results": 120
         }
         self.app_settings_path = CONFIG_DIR / "app_settings.json"
         self._load()
