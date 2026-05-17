@@ -190,24 +190,22 @@ class SystemTrayIcon(QSystemTrayIcon):
         else:
             try:
                 # Recreate only for detached windows (invisible and parentless), not normal hidden ones.
-                needs_recreate = (not self.game_picker_window.isVisible() and self.game_picker_window.parent() is None)
+                needs_recreate = not self.game_picker_window.isVisible() and self.game_picker_window.parent() is None
             except RuntimeError as exc:
                 logger.debug("Picker visibility check failed; recreating window: %s", exc)
                 needs_recreate = True
-            if not needs_recreate:
-                self._show_and_activate_picker()
-                return
-            # Keep single instance but recover if somehow detached/invalid.
-            try:
-                self.game_picker_window.close()
-                self.game_picker_window.deleteLater()
-            except RuntimeError as exc:
-                if self._is_picker_deleted():
-                    logger.debug("Detached picker cleanup skipped; Qt object already deleted")
-                else:
-                    logger.error("Unexpected RuntimeError while cleaning detached picker: %s", exc)
-                    raise
-            self._create_picker_window()
+            if needs_recreate:
+                # Keep single instance but recover if somehow detached/invalid.
+                try:
+                    self.game_picker_window.close()
+                    self.game_picker_window.deleteLater()
+                except RuntimeError as exc:
+                    if self._is_picker_deleted():
+                        logger.debug("Detached picker cleanup skipped; Qt object already deleted")
+                    else:
+                        logger.error("Unexpected RuntimeError while cleaning detached picker: %s", exc)
+                        raise
+                self._create_picker_window()
         try:
             self._show_and_activate_picker()
         except RuntimeError as exc:
