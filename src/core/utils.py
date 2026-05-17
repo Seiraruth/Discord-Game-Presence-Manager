@@ -162,7 +162,8 @@ def load_locale(lang: str = "en") -> dict:
         return {}
 
 def ensure_env_file(path: Path):
-    default_env_content = """CLIENT_ID = '1095416975028650046'
+    default_env_content = """# Required: set your own Discord Application Client ID
+CLIENT_ID = ''
 UPDATE_INTERVAL = 10
 CONFIG_PATH_FILE = ''
 TEST_RICH_URL = 'https://steamcommunity.com/dev/testrichpresence'

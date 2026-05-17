@@ -50,7 +50,8 @@ class PresenceManager(QObject):
     sync_error = pyqtSignal(str)
     
     def __init__(self, client_id: str, games_map: dict, cookie_manager: CookieManager, test_rich_url: str, texts: Dict,
-                 update_interval: int = 10, keep_alive: bool = False):
+                 update_interval: int = 10, keep_alive: bool = False,
+                 idle_presence_enabled: bool = False, clear_presence_when_idle: bool = True):
         super().__init__()
         # en __init__
         self._match_cache_lock = threading.Lock()
@@ -70,6 +71,8 @@ class PresenceManager(QObject):
         self.texts = texts
         self.update_interval = update_interval
         self.keep_alive = keep_alive
+        self.idle_presence_enabled = idle_presence_enabled
+        self.clear_presence_when_idle = clear_presence_when_idle
         
         self.fake_proc = None
         self.fake_exec_path = None
@@ -336,26 +339,50 @@ class PresenceManager(QObject):
         self.close()
 
     def _connect_rpc(self, client_id: Optional[str] = None):
-        if client_id !="1095416975028650046":
-            try:
-                if self.rpc:
-                    try:
-                        self.rpc.close()
-                    except Exception:
-                        pass
-                client_id = client_id or self.client_id
-                self.rpc = Presence(client_id)
-                self.rpc.connect()
-                self._connected_client_id = client_id
-                logger.info(f"✅ Conectado a Discord RPC con client_id={client_id}")
-            except Exception as e:
-                if e == "Could not find Discord installed and running on this machine.":
-                    logger.error(f"💨 Relanzando Discord...")
-                    AppLauncher.launch_discord()
-                else:
-                    logger.error(f"❌ Error conectando a Discord RPC: {e}")
-                self.rpc = None
-                self._connected_client_id = None
+        try:
+            if self.rpc:
+                try:
+                    self.rpc.close()
+                except Exception:
+                    pass
+            client_id = client_id or self.client_id
+            self.rpc = Presence(client_id)
+            self.rpc.connect()
+            self._connected_client_id = client_id
+            logger.info(f"✅ Conectado a Discord RPC con client_id={client_id}")
+        except Exception as e:
+            if e == "Could not find Discord installed and running on this machine.":
+                logger.error(f"💨 Relanzando Discord...")
+                AppLauncher.launch_discord()
+            else:
+                logger.error(f"❌ Error conectando a Discord RPC: {e}")
+            self.rpc = None
+            self._connected_client_id = None
+
+    def apply_idle_or_clear(self):
+        """Apply configured idle behavior when no game should be shown."""
+        if not self.rpc:
+            return
+        try:
+            if self.clear_presence_when_idle:
+                self.rpc.clear()
+                logger.debug("🧹 Presencia limpiada por configuración idle.")
+                return
+
+            if self.idle_presence_enabled:
+                self.rpc.update(
+                    details=self.texts.get("idle_details", "Idle"),
+                    state=self.texts.get("idle_state", "Waiting for a game"),
+                    large_image="steam",
+                    large_text=self.texts.get("idle_large_text", "Discord Presence Manager"),
+                )
+                logger.debug("💤 Presencia idle aplicada.")
+                return
+
+            self.rpc.clear()
+            logger.debug("🧹 Sin idle activo: presencia limpiada de forma segura.")
+        except Exception as e:
+            logger.debug(f"Error aplicando idle/clear: {e}")
 
     def stop_force_game(self):
         """Stop forced game and return to idle/clear behavior only."""
@@ -373,10 +400,7 @@ class PresenceManager(QObject):
 
         try:
             if self.rpc:
-                if self.keep_alive:
-                    self._set_idle_presence()
-                else:
-                    self.rpc.clear()
+                self.apply_idle_or_clear()
         except Exception as e:
             logger.debug(f"Error limpiando RPC en stop_force_game: {e}")
 
@@ -1150,7 +1174,8 @@ class PresenceManager(QObject):
         if not current_game:
             if self.last_game is not None:
                 try:
-                    if self.rpc: self.rpc.clear()
+                    if self.rpc:
+                        self.apply_idle_or_clear()
                 except Exception:
                     pass
                 self.last_game = None
