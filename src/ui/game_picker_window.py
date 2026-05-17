@@ -54,6 +54,10 @@ class GamePickerWindow(QDialog):
         self._cover_batch_timer.setInterval(100)
         self._cover_batch_timer.timeout.connect(self._process_cover_batch)
         self._max_visible_results = int(self._get_setting("game_picker_max_visible_results", 120) or 120)
+        self._search_limit = min(max(int(self._get_setting("game_picker_search_limit", 50) or 50), 1), 50)
+        self._empty_limit = min(max(int(self._get_setting("game_picker_empty_limit", 24) or 24), 1), 24)
+        self._cover_initial_batch_size = min(max(int(self._get_setting("game_art_initial_batch_size", 4) or 4), 1), 4)
+        self._cover_batch_size = min(max(int(self._get_setting("game_art_batch_size", 2) or 2), 1), 2)
         self._search_limit = int(self._get_setting("game_picker_search_limit", 60) or 60)
         self._empty_limit = int(self._get_setting("game_picker_empty_limit", 40) or 40)
         self._cover_initial_batch_size = int(self._get_setting("game_art_initial_batch_size", 8) or 8)
@@ -113,6 +117,11 @@ class GamePickerWindow(QDialog):
         self.search_timer = QTimer(self); self.search_timer.setSingleShot(True); self.search_timer.setInterval(250)
         self.search.textChanged.connect(lambda: self.search_timer.start())
         self.search_timer.timeout.connect(self.apply_filter)
+        self._visible_cover_timer = QTimer(self)
+        self._visible_cover_timer.setSingleShot(True)
+        self._visible_cover_timer.setInterval(150)
+        self._visible_cover_timer.timeout.connect(self._load_visible_covers)
+        self.list.verticalScrollBar().valueChanged.connect(self._schedule_visible_cover_load)
         self.list.itemClicked.connect(self.force_from_item)
         self.list.itemDoubleClicked.connect(lambda item: self.force_from_item(item, minimize=True))
         self.stop_btn.clicked.connect(self.stop_presence)
@@ -121,6 +130,10 @@ class GamePickerWindow(QDialog):
         self.close_btn.clicked.connect(self.close)
         if hasattr(self.pm, "sync_finished"):
             self.pm.sync_finished.connect(self._on_sync_finished)
+
+        logger.debug("Game picker UI constructed")
+        QTimer.singleShot(0, self.initial_load)
+
 
         logger.debug("Game picker UI constructed")
         QTimer.singleShot(0, self.initial_load)
@@ -203,6 +216,7 @@ class GamePickerWindow(QDialog):
         if all(ch in short for ch in ql): return 500
         return int(difflib.SequenceMatcher(None, ql, n).ratio()*100)
 
+    # TODO: For better scalability, migrate to QListView + QAbstractListModel + custom delegate virtualization.
     def apply_filter(self):
         if not hasattr(self, "_max_visible_results"):
             self._max_visible_results = 120
@@ -212,6 +226,31 @@ class GamePickerWindow(QDialog):
             self.status.setText("Loading games..." if self._loading else "No games loaded.")
             return
         q = self.search.text().strip()
+        ql = q.lower()
+        t0 = time.perf_counter()
+        ranked = []
+        matched_count = 0
+        mode = "search" if q else "empty"
+        if not q:
+            recent_lower = {x.lower() for x in (self.recent or [])}
+            recent_ranked = []
+            others = []
+            for e in self.entries:
+                nl = e.name.lower()
+                if nl in recent_lower:
+                    recent_ranked.append((1000, e))
+                else:
+                    others.append((100, e))
+            ranked = recent_ranked + others
+            matched_count = len(self.entries)
+        else:
+            for e in self.entries:
+                score = self._rank(e.name, q)
+                if score < 35:
+                    continue
+                matched_count += 1
+                ranked.append((score, e))
+            ranked.sort(key=lambda x: x[0], reverse=True)
         t0 = time.perf_counter()
         ranked = []
         matched_count = 0
@@ -226,6 +265,7 @@ class GamePickerWindow(QDialog):
         render_limit = self._search_limit if q else self._empty_limit
         self.list.clear()
         self._cover_batch_timer.stop()
+        self._visible_cover_timer.stop()
         self._pending_cover_items.clear()
         shown = 0
         self._visible_keys = set()
@@ -249,6 +289,10 @@ class GamePickerWindow(QDialog):
             self.results_status.setText(f"Showing {shown} of {matched_count} matches · Library: {total}")
         else:
             self.results_status.setText(f"Showing {shown} games · Library: {total}")
+            self.status.setText(f"Type to search {total} games")
+        elapsed = time.perf_counter() - t0
+        logger.debug("Game picker filter mode=%s query=%r limit=%s matched=%s shown=%s total=%s duration=%.3fs", mode, q, render_limit, matched_count, shown, total, elapsed)
+        self._schedule_visible_cover_load(initial=True)
         elapsed = time.perf_counter() - t0
         logger.debug("Game picker filter query=%r matched=%s shown=%s total=%s in %.3fs", q, matched_count, shown, total, elapsed)
         if self._pending_cover_items:
@@ -286,6 +330,47 @@ class GamePickerWindow(QDialog):
             self._queue_cover(item, entry)
         if not self._pending_cover_items:
             self._cover_batch_timer.stop()
+        logger.debug("Game picker queued %s cover jobs in %.3fs", len(batch), time.perf_counter() - t0)
+
+    def _schedule_visible_cover_load(self, initial=False):
+        if initial:
+            self._visible_cover_timer.start(50)
+        else:
+            self._visible_cover_timer.start()
+
+    def _load_visible_covers(self):
+        viewport_rect = self.list.viewport().rect().adjusted(0, -300, 0, 300)
+        visible_candidates = []
+        queued_count = 0
+        for i in range(self.list.count()):
+            item = self.list.item(i)
+            if not item:
+                continue
+            rect = self.list.visualItemRect(item)
+            if not rect.isValid() or not rect.intersects(viewport_rect):
+                continue
+            key = item.data(Qt.UserRole + 1)
+            entry = item.data(Qt.UserRole)
+            if not key or not entry:
+                continue
+            cached = self._icon_cache.get(key)
+            if cached:
+                item.setIcon(cached)
+                continue
+            if key in self._in_flight_art:
+                continue
+            visible_candidates.append((item, entry))
+
+        if visible_candidates:
+            first = visible_candidates[:self._cover_initial_batch_size]
+            rest = visible_candidates[self._cover_initial_batch_size:]
+            for item, entry in first:
+                self._queue_cover(item, entry)
+                queued_count += 1
+            self._pending_cover_items = rest
+            if self._pending_cover_items and not self._cover_batch_timer.isActive():
+                self._cover_batch_timer.start()
+        logger.debug("Queued %s visible cover jobs; pending=%s in_flight=%s", queued_count, len(self._pending_cover_items), len(self._in_flight_art))
             self._cover_batch_timer.stop()
         logger.debug("Game picker queued %s cover jobs in %.3fs", len(batch), time.perf_counter() - t0)
 
