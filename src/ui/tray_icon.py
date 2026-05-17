@@ -180,6 +180,11 @@ class SystemTrayIcon(QSystemTrayIcon):
             self.game_picker_window = GamePickerWindow(self.pm, self.config_manager, tray_icon=self)
         elif not self.game_picker_window.isVisible() and self.game_picker_window.parent() is None:
             # keep single instance but recover if somehow detached/invalid
+            try:
+                self.game_picker_window.close()
+                self.game_picker_window.deleteLater()
+            except Exception:
+                pass
             self.game_picker_window = GamePickerWindow(self.pm, self.config_manager, tray_icon=self)
         self.game_picker_window.refresh_state_on_open()
         self.game_picker_window.show()
