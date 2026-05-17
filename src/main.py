@@ -109,11 +109,14 @@ def main():
     #MOVE TO TRAY ICON
     
     test_rich_url = os.getenv("TEST_RICH_URL", "").strip()
-    client_id = os.getenv("CLIENT_ID", "").strip()
-    if not client_id:
-        logger.error("❌ Falta CLIENT_ID en .env. Define un Discord Application Client ID válido para continuar.")
-        release_lock()
-        sys.exit(1)
+    default_client_id = "1095416975028650046"
+    client_id_env = os.getenv("CLIENT_ID", "").strip()
+    if client_id_env:
+        client_id = client_id_env
+        logger.info("Using CLIENT_ID from .env")
+    else:
+        client_id = default_client_id
+        logger.info("Using bundled default CLIENT_ID")
     steam_cookie_env = os.getenv("STEAM_COOKIE", "").strip() or None
     update_interval = int(os.getenv("UPDATE_INTERVAL", "10"))
 
