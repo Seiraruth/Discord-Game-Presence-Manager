@@ -178,6 +178,9 @@ class SystemTrayIcon(QSystemTrayIcon):
     def open_game_picker(self):
         if self.game_picker_window is None or self._is_picker_deleted():
             self.game_picker_window = GamePickerWindow(self.pm, self.config_manager, tray_icon=self)
+        elif not self.game_picker_window.isVisible() and self.game_picker_window.parent() is None:
+            # keep single instance but recover if somehow detached/invalid
+            self.game_picker_window = GamePickerWindow(self.pm, self.config_manager, tray_icon=self)
         self.game_picker_window.refresh_state_on_open()
         self.game_picker_window.show()
         self.game_picker_window.raise_()
