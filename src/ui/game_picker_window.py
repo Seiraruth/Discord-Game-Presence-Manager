@@ -111,6 +111,10 @@ class GamePickerWindow(QDialog):
         logger.debug("Game picker UI constructed")
         QTimer.singleShot(0, self.initial_load)
 
+
+        logger.debug("Game picker UI constructed")
+        QTimer.singleShot(0, self.initial_load)
+
     def _get_setting(self, key, default=None):
         try:
             if hasattr(self.config_manager, "get_setting"):
@@ -199,6 +203,8 @@ class GamePickerWindow(QDialog):
         ranked.sort(key=lambda x: x[0], reverse=True)
         total = len(self.entries)
         self.list.clear()
+        self._cover_batch_timer.stop()
+        self._pending_cover_items.clear()
         shown = 0
         self._visible_keys = set()
         self._pending_cover_items = []
@@ -206,6 +212,7 @@ class GamePickerWindow(QDialog):
             item = QListWidgetItem(f"{e.name}\n{e.source}")
             item.setData(Qt.UserRole, e)
             key = self._entry_key(e)
+            item.setData(Qt.UserRole + 1, key)
             self._visible_keys.add(key)
             cached_icon = self._icon_cache.get(key)
             item.setIcon(cached_icon if cached_icon else self._placeholder_icon(e.name))
@@ -243,6 +250,8 @@ class GamePickerWindow(QDialog):
         if cached_icon:
             item.setIcon(cached_icon)
             return
+        if key in self._in_flight_art:
+            return
             return
         if key in self._in_flight_art:
             return
@@ -251,10 +260,56 @@ class GamePickerWindow(QDialog):
             return
         self._in_flight_art.add(key)
         signals = WorkerSignals()
-        signals.done.connect(lambda game, path, it=item, k=key: self._set_cover(it, path, game, k))
+        signals.done.connect(lambda game, path, k=key: self._set_cover_by_key(path, game, k))
         self.thread_pool.start(ArtJob(self.resolver, entry.__dict__, signals))
 
+    def _find_item_by_cover_key(self, key):
+        for i in range(self.list.count()):
+            item = self.list.item(i)
+            try:
+                if item and item.data(Qt.UserRole + 1) == key:
+                    return item
+            except RuntimeError:
+                continue
+        return None
+
+    def _set_cover_by_key(self, path, game, key):
+        del game
+        try:
+            self._in_flight_art.discard(key)
+            if not path:
+                return
+            item = self._find_item_by_cover_key(key)
+            if item is None:
+                return
+            current_entry = item.data(Qt.UserRole)
+            if not current_entry:
+                return
+            current_key = item.data(Qt.UserRole + 1)
+            if current_key != key:
+                return
+            icon = self._icon_cache.get(key)
+            if icon is None:
+                pix = QPixmap(str(path))
+                if pix.isNull():
+                    return
+                from PyQt5.QtGui import QIcon
+                icon = QIcon(pix.scaled(160,220,Qt.KeepAspectRatioByExpanding,Qt.SmoothTransformation))
+                self._icon_cache[key] = icon
+            item.setIcon(icon)
+        except RuntimeError:
+            logger.debug("Ignoring stale cover update for deleted item/key=%s", key)
+        except Exception:
+            logger.exception("Failed to apply cover art for key=%s", key)
+
     def _set_cover(self, item, path, game, key):
+        del item
+        self._set_cover_by_key(path, game, key)
+
+    def _set_cover_legacy_guard(self, item):
+        try:
+            return self.list.row(item)
+        except RuntimeError:
         self._in_flight_art.discard(key)
         if not path: return
         pix = QPixmap(str(path))
@@ -270,7 +325,6 @@ class GamePickerWindow(QDialog):
         e = item.data(Qt.UserRole)
         if not e or self._entry_key(e) != key:
             return
-        item.setIcon(icon)
 
     def force_from_item(self, item, minimize=False):
         if self.tray_icon is None:
@@ -334,6 +388,8 @@ class GamePickerWindow(QDialog):
             logger.exception("Failed to reload recent games")
             self.recent = []
 
+        if self._loading:
+            return
         if not self._loaded:
             if not self._loading:
                 QTimer.singleShot(0, self.initial_load)
