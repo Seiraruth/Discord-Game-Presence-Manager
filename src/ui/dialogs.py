@@ -1,3 +1,4 @@
+from src.ui.components import AnimatedDialog
 from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QLabel, QLineEdit, QPushButton, 
                              QListWidget, QHBoxLayout, QMessageBox, QWidget)
 from PyQt5.QtGui import QIcon, QMovie
@@ -16,123 +17,14 @@ except Exception:
 logger = logging.getLogger('discord_presence_manager')
 
 
-# ---- ESTILOS GLOBALES ----
-GAMING_STYLESHEET = """
-    QDialog {
-        background-color: #0d0e10;
-        border: 2px solid #1b1f23;
-        border-radius: 14px;
-    }
 
-    QLabel {
-        font-size: 14px;
-        font-family: "Segoe UI";
-        color: #e0e0e0;
-        padding-bottom: 4px;
-    }
-    
-    QLabel#title_label {
-        font-size: 18px;
-        font-weight: bold;
-        color: #ffffff;
-        padding-bottom: 8px;
-    }
-
-    QLineEdit, QSpinBox {
-        padding: 8px;
-        font-size: 14px;
-        border: 1px solid #2c2f33;
-        border-radius: 6px;
-        background: #1a1b1d;
-        color: #ffffff;
-        font-family: "Segoe UI";
-        font-weight: bold;
-    }
-
-    QLineEdit:focus, QSpinBox:focus {
-        border: 2px solid #454C55;
-    }
-
-    QPushButton {
-        background-color: #045D0E;
-        color: #FFFFFF;
-        padding: 8px 16px;
-        border-radius: 6px;
-        font-size: 14px;
-        font-family: "Segoe UI";
-        font-weight: bold;
-    }
-
-    QPushButton:hover {
-        background-color: #12881F;
-    }
-    
-    QPushButton:pressed {
-        background-color: #03420a;
-    }
-
-    QPushButton#secondary {
-        background-color: #2c2f33;
-        color: #e6e6e6;
-    }
-
-    QPushButton#secondary:hover {
-        background-color: #3c3f43;
-    }
-
-    /* LIST WIDGET & SCROLLBARS */
-    QListWidget {
-        background: #131416;
-        border: 1px solid #1f2428;
-        border-radius: 8px;
-        padding: 6px;
-        font-size: 13px;
-        font-family: Consolas, monospace;
-        color: #cfcfcf;
-    }
-
-    QListWidget::item {
-        padding: 8px;
-        border-radius: 4px;
-        color: #dfdfdf;
-    }
-
-    QListWidget::item:selected {
-        background-color: #00e676;
-        color: #0e0f11;
-        font-weight: bold;
-    }
-
-    QScrollBar:vertical {
-        background: transparent;
-        width: 8px;
-        margin: 4px 0;
-    }
-    QScrollBar::handle:vertical {
-        background: #383a3d;
-        border-radius: 4px;
-        min-height: 30px;
-    }
-    QScrollBar::handle:vertical:hover {
-        background: #4a4d50;
-    }
-    QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
-        height: 0; 
-        background: none; 
-    }
-"""
-
-class GamingMessageBox(QDialog):
+class GamingMessageBox(AnimatedDialog):
     def __init__(self, title, text, icon_type="info", parent=None):
-        super().__init__(parent)
-        self.setWindowTitle(title)
-        self.setWindowIcon(QIcon(str(ASSETS_DIR / "discord.png")))
+        super().__init__(title, parent)
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
-        self.setStyleSheet(GAMING_STYLESHEET)
-        
+                
         # Layout
-        layout = QVBoxLayout()
-        layout.setContentsMargins(25, 25, 25, 20)
+        layout = self.content_layout
         layout.setSpacing(20)
         
         # Icon & Text Row (Optional: add an icon label if desired, skipping for simplicity to match style)
@@ -165,7 +57,6 @@ class GamingMessageBox(QDialog):
             btn_layout.addStretch()
             
         layout.addLayout(btn_layout)
-        self.setLayout(layout)
         # Auto size
         self.adjustSize()
 
@@ -184,16 +75,12 @@ class GamingMessageBox(QDialog):
         dlg = GamingMessageBox(title, text, "question", parent)
         return dlg.exec_() == QDialog.Accepted
 
-class GamingInputDialog(QDialog):
+class GamingInputDialog(AnimatedDialog):
     def __init__(self, title, label_text, value=0, min_val=0, max_val=100, step=1, parent=None):
-        super().__init__(parent)
-        self.setWindowTitle(title)
-        self.setWindowIcon(QIcon(str(ASSETS_DIR / "discord.png")))
+        super().__init__(title, parent)
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
-        self.setStyleSheet(GAMING_STYLESHEET)
-        
-        layout = QVBoxLayout()
-        layout.setContentsMargins(25, 25, 25, 20)
+                
+        layout = self.content_layout
         layout.setSpacing(15)
         
         lbl = QLabel(label_text)
@@ -218,9 +105,7 @@ class GamingInputDialog(QDialog):
         btn_layout.addWidget(self.ok_btn)
         btn_layout.addWidget(self.cancel_btn)
         layout.addLayout(btn_layout)
-        
-        self.setLayout(layout)
-        self.setFixedSize(300, 180)
+        self.setFixedSize(300, 240)
 
     @staticmethod
     def get_int(parent, title, label, value=0, min_val=0, max_val=100, step=1):
@@ -232,7 +117,7 @@ class GamingInputDialog(QDialog):
 
 from PyQt5.QtCore import pyqtSignal
 
-class AskGameDialog(QDialog):
+class AskGameDialog(AnimatedDialog):
     quest_mode_requested = pyqtSignal()
     update_list_requested = pyqtSignal()
 
@@ -245,12 +130,10 @@ class AskGameDialog(QDialog):
         self.setFixedSize(460, 280) # Increased size for better layout
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
 
-        # ---- 🎮 DARK GAMING STYLE ----
-        self.setStyleSheet(GAMING_STYLESHEET)
-
+        
+        
         # ---- LAYOUT ----
-        layout = QVBoxLayout()
-        layout.setContentsMargins(25, 25, 25, 15)
+        layout = self.content_layout
         layout.setSpacing(15)
 
         # Centrado del label
@@ -298,7 +181,6 @@ class AskGameDialog(QDialog):
         btn_layout.addWidget(self.cancel_btn)
 
         layout.addLayout(btn_layout)
-        self.setLayout(layout)
 
 
     def resizeEvent(self, event):
@@ -319,19 +201,15 @@ class AskGameDialog(QDialog):
         self.update_list_requested.emit()
 
 
-class QuestListDialog(QDialog):
+class QuestListDialog(AnimatedDialog):
     def __init__(self, presence_manager, parent=None):
-        super().__init__(parent)
+        super().__init__("Activity Simulator - Active Games", parent)
         self.pm = presence_manager
-        self.setWindowTitle("Activity Simulator - Active Games")
-        self.setWindowIcon(QIcon(str(ASSETS_DIR / "discord.png")))
         self.setMinimumWidth(450)
         self.setMinimumHeight(400)
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
-        self.setStyleSheet(GAMING_STYLESHEET)
-        
-        layout = QVBoxLayout()
-        layout.setContentsMargins(15, 15, 15, 15)
+                
+        layout = self.content_layout
         layout.setSpacing(10)
         
         lbl = QLabel(TEXTS.get("active_games", "Active Games (15 minutes max.)"))
@@ -340,7 +218,7 @@ class QuestListDialog(QDialog):
         layout.addWidget(lbl)
         
         self.list_widget = QListWidget()
-        self.list_widget.setStyleSheet(GAMING_STYLESHEET + """
+        self.list_widget.setStyleSheet("""
             QListWidget::item { 
                 border-bottom: 1px solid #2c2f33; 
                 margin-bottom: 4px;
@@ -357,8 +235,6 @@ class QuestListDialog(QDialog):
         self.close_btn.setObjectName("secondary")
         self.close_btn.clicked.connect(self.accept)
         layout.addWidget(self.close_btn)
-        
-        self.setLayout(layout)
         
         # Timer for UI updates
         from PyQt5.QtCore import QTimer
@@ -510,25 +386,20 @@ class QuestListDialog(QDialog):
 
 
 
-class MatchSelectionDialog(QDialog):
+class MatchSelectionDialog(AnimatedDialog):
     def __init__(self, game_key, candidates, parent=None):
-        super().__init__(parent)
-
         title_text = TEXTS.get("match_title", "Matches for: {busqueda}").replace("{busqueda}", game_key)
-        self.setWindowTitle(title_text)
-        self.setWindowIcon(QIcon(str(ASSETS_DIR / "discord.png")))
+        super().__init__(title_text, parent)
         self.setMinimumWidth(540)
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
 
         self.candidates = candidates
         self.selected_match = None
 
-        # ---- 🎮 DARK GAMING STYLE ----
-        self.setStyleSheet(GAMING_STYLESHEET)
-
+        
+        
         # ---- LAYOUT ----
-        layout = QVBoxLayout()
-        layout.setContentsMargins(20, 20, 20, 15)
+        layout = self.content_layout
         layout.setSpacing(15)
 
         from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QAbstractItemView, QHeaderView
@@ -549,7 +420,7 @@ class MatchSelectionDialog(QDialog):
         self.table_widget.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeToContents)
         self.table_widget.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeToContents)
 
-        self.table_widget.setStyleSheet(GAMING_STYLESHEET + """
+        self.table_widget.setStyleSheet("""
             QTableWidget {
                 background: #131416;
                 border: 1px solid #1f2428;
@@ -606,8 +477,6 @@ class MatchSelectionDialog(QDialog):
         btn_layout.addWidget(self.ignore_btn)
         layout.addLayout(btn_layout)
 
-        self.setLayout(layout)
-
     def on_confirm(self):
         row = self.table_widget.currentRow()
         if row >= 0:
@@ -621,19 +490,15 @@ class MatchSelectionDialog(QDialog):
             )
 
 
-class CustomPresenceDialog(QDialog):
+class CustomPresenceDialog(AnimatedDialog):
     def __init__(self, game_name, current_data, parent=None):
-        super().__init__(parent)
-        self.setWindowTitle(f"Custom Presence: {game_name}")
-        self.setWindowIcon(QIcon(str(ASSETS_DIR / "discord.png")))
+        super().__init__(f"Custom Presence: {game_name}", parent)
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
-        self.setStyleSheet(GAMING_STYLESHEET)
-        
+                
         self.game_name = game_name
         self.result_data = None
         
-        layout = QVBoxLayout()
-        layout.setContentsMargins(20, 20, 20, 20)
+        layout = self.content_layout
         layout.setSpacing(15)
         
         # Helper to create rows
@@ -692,8 +557,6 @@ class CustomPresenceDialog(QDialog):
         btn_layout.addWidget(self.save_btn)
         btn_layout.addWidget(self.cancel_btn)
         layout.addLayout(btn_layout)
-        
-        self.setLayout(layout)
         self.adjustSize()
 
     def on_save(self):
@@ -729,8 +592,7 @@ class AboutDialog(QDialog):
         self.setWindowIcon(QIcon(str(ASSETS_DIR / "discord.png")))
         self.setFixedSize(400, 250)
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
-        self.setStyleSheet(GAMING_STYLESHEET)
-        
+                
         layout = QVBoxLayout()
         layout.setContentsMargins(25, 25, 25, 25)
         layout.setSpacing(15)

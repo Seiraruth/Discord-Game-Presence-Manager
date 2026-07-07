@@ -13,71 +13,9 @@ from PyQt5.QtWidgets import (
 from rapidfuzz import fuzz
 
 from src.core.game_art_resolver import GameArtResolver
+from src.ui.components import TitleBar, AccentDot
 
 logger = logging.getLogger('discord_presence_manager')
-
-class AccentDot(QWidget):
-    """Tiny filled circle used as a status indicator in the title bar."""
-    def __init__(self, color="#5865f2", size=6, parent=None):
-        super().__init__(parent)
-        self._color = QColor(color)
-        self.setFixedSize(size, size)
-
-    def paintEvent(self, event):
-        p = QPainter(self)
-        p.setRenderHint(QPainter.Antialiasing)
-        p.setPen(Qt.NoPen)
-        p.setBrush(self._color)
-        p.drawEllipse(0, 0, self.width(), self.height())
-        p.end()
-
-class TitleBar(QWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setFixedHeight(36)
-        self.setObjectName("titleBarWidget")
-
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(14, 0, 8, 0)
-        layout.setSpacing(8)
-
-        self.accent_dot = AccentDot(parent=self)
-        layout.addWidget(self.accent_dot)
-
-        self.title_label = QLabel("Discord Presence Manager")
-        self.title_label.setObjectName("titleBarLabel")
-        layout.addWidget(self.title_label)
-
-        layout.addStretch()
-
-        self.min_btn = QPushButton("—")
-        self.min_btn.setObjectName("titleBarBtn")
-        self.min_btn.setFixedSize(36, 28)
-        self.min_btn.setCursor(Qt.PointingHandCursor)
-        self.min_btn.clicked.connect(self.window().showMinimized)
-        layout.addWidget(self.min_btn)
-
-        self.close_btn = QPushButton("✕")
-        self.close_btn.setObjectName("titleBarCloseBtn")
-        self.close_btn.setFixedSize(36, 28)
-        self.close_btn.setCursor(Qt.PointingHandCursor)
-        self.close_btn.clicked.connect(self.window().close)
-        layout.addWidget(self.close_btn)
-
-        self.start_pos = None
-
-    def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            self.start_pos = event.globalPos()
-
-    def mouseMoveEvent(self, event):
-        if self.start_pos is not None:
-            delta = event.globalPos() - self.start_pos
-            self.window().move(self.window().pos() + delta)
-            self.start_pos = event.globalPos()
-
-    def mouseReleaseEvent(self, event):
-        self.start_pos = None
 
 @dataclass
 class GameEntry:
@@ -344,7 +282,7 @@ class GamePickerWindow(QDialog):
         main_lay.setContentsMargins(0, 0, 0, 0)
         main_lay.setSpacing(0)
         
-        self.title_bar = TitleBar(self)
+        self.title_bar = TitleBar(title="Force Game", parent=self)
         main_lay.addWidget(self.title_bar)
         
         content_widget = QWidget()
@@ -416,8 +354,15 @@ class GamePickerWindow(QDialog):
         self.refresh_btn.setCursor(Qt.PointingHandCursor)
         self.close_btn = QPushButton("Close")
         self.close_btn.setCursor(Qt.PointingHandCursor)
+        from PyQt5.QtWidgets import QSizeGrip
         for b in (self.stop_btn, self.sync_btn, self.refresh_btn, self.close_btn):
             btns.addWidget(b)
+        btns.addStretch()
+        
+        size_grip = QSizeGrip(self)
+        size_grip.setFixedSize(16, 16)
+        btns.addWidget(size_grip)
+        
         lay.addLayout(btns)
 
         self.search_timer = QTimer(self); self.search_timer.setSingleShot(True); self.search_timer.setInterval(250)
@@ -471,6 +416,29 @@ class GamePickerWindow(QDialog):
             return settings.get(key, default)
         except Exception:
             return default
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        # Use singleShot so layout has time to resize the list widget before we read viewport().width()
+        QTimer.singleShot(0, self._recalculate_grid)
+
+    def _recalculate_grid(self):
+        available_width = self.list.viewport().width()
+        spacing = self.list.spacing()
+        # Ensure we don't divide by zero if width is extremely small
+        if available_width <= 0:
+            return
+            
+        min_item_width = 178
+        columns = max(1, available_width // (min_item_width + spacing))
+        
+        # The list widget adds spacing between columns and at the edges,
+        # but to perfectly fill the space, we calculate the exact cell width.
+        # We subtract 1 extra pixel to avoid floating point / rounding wrapping issues causing a scrollbar flutter.
+        cell_width = max(178, (available_width // columns) - spacing - 1)
+        
+        from PyQt5.QtCore import QSize
+        self.list.setGridSize(QSize(cell_width, 295))
 
     def initial_load(self):
         if self._loading or self._loaded:

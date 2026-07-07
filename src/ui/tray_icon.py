@@ -12,9 +12,10 @@ from PyQt5.QtWidgets import QSystemTrayIcon, QMenu, QAction, QApplication, QMess
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtWidgets import QDialog
+from src.ui.components import load_global_stylesheet
 from src.core.utils import ASSETS_DIR, LOG_FILE, set_autostart_windows
 from src.core.app_launcher import AppLauncher
-from src.ui.dialogs import MatchSelectionDialog, GamingMessageBox, GamingInputDialog, CustomPresenceDialog, AboutDialog, GAMING_STYLESHEET
+from src.ui.dialogs import MatchSelectionDialog, GamingMessageBox, GamingInputDialog, CustomPresenceDialog, AboutDialog
 from src.ui.game_picker_window import GamePickerWindow
 from src.core.utils import get_lang_from_registry, load_locale
 
@@ -26,6 +27,81 @@ except Exception:
     TEXTS = load_locale(LANG)
 
 logger = logging.getLogger('discord_presence_manager')
+
+
+def _draw_icon(draw_func, color="#e8e8ea", size=16):
+    from PyQt5.QtGui import QPixmap, QPainter, QColor, QPen, QPainterPath
+    from PyQt5.QtCore import Qt, QRectF
+    pixmap = QPixmap(size, size)
+    pixmap.fill(Qt.transparent)
+    painter = QPainter(pixmap)
+    painter.setRenderHint(QPainter.Antialiasing)
+    pen = QPen(QColor(color))
+    pen.setWidth(2)
+    pen.setCapStyle(Qt.RoundCap)
+    pen.setJoinStyle(Qt.RoundJoin)
+    painter.setPen(pen)
+    painter.setBrush(Qt.NoBrush)
+    draw_func(painter, size)
+    painter.end()
+    from PyQt5.QtGui import QIcon
+    return QIcon(pixmap)
+
+def icon_play():
+    def draw(p, s):
+        p.setBrush(p.pen().color())
+        from PyQt5.QtGui import QPolygonF
+        from PyQt5.QtCore import QPointF
+        poly = QPolygonF([QPointF(s*0.3, s*0.2), QPointF(s*0.8, s*0.5), QPointF(s*0.3, s*0.8)])
+        p.drawPolygon(poly)
+    return _draw_icon(draw, "#5865f2")
+
+def icon_stop():
+    def draw(p, s):
+        p.setBrush(p.pen().color())
+        p.drawRoundedRect(int(s*0.25), int(s*0.25), int(s*0.5), int(s*0.5), 2, 2)
+    return _draw_icon(draw, "#ed4245")
+
+def icon_sync():
+    def draw(p, s):
+        p.drawArc(int(s*0.2), int(s*0.2), int(s*0.6), int(s*0.6), 45*16, 270*16)
+        # Arrow head
+        p.drawLine(int(s*0.8), int(s*0.5), int(s*0.65), int(s*0.35))
+        p.drawLine(int(s*0.8), int(s*0.5), int(s*0.95), int(s*0.35))
+    return _draw_icon(draw, "#1b9aaa")
+
+def icon_cookie():
+    def draw(p, s):
+        p.drawEllipse(int(s*0.15), int(s*0.15), int(s*0.7), int(s*0.7))
+        p.setBrush(p.pen().color())
+        p.drawEllipse(int(s*0.35), int(s*0.35), 2, 2)
+        p.drawEllipse(int(s*0.6), int(s*0.45), 2, 2)
+        p.drawEllipse(int(s*0.4), int(s*0.65), 2, 2)
+    return _draw_icon(draw, "#e8e8ea")
+
+def icon_config():
+    def draw(p, s):
+        p.drawEllipse(int(s*0.3), int(s*0.3), int(s*0.4), int(s*0.4))
+        p.drawLine(int(s*0.5), int(s*0.1), int(s*0.5), int(s*0.3))
+        p.drawLine(int(s*0.5), int(s*0.7), int(s*0.5), int(s*0.9))
+        p.drawLine(int(s*0.1), int(s*0.5), int(s*0.3), int(s*0.5))
+        p.drawLine(int(s*0.7), int(s*0.5), int(s*0.9), int(s*0.5))
+    return _draw_icon(draw, "#9a9aa2")
+
+def icon_log():
+    def draw(p, s):
+        p.drawRoundedRect(int(s*0.25), int(s*0.15), int(s*0.5), int(s*0.7), 2, 2)
+        p.drawLine(int(s*0.4), int(s*0.35), int(s*0.6), int(s*0.35))
+        p.drawLine(int(s*0.4), int(s*0.55), int(s*0.6), int(s*0.55))
+    return _draw_icon(draw, "#9a9aa2")
+
+def icon_exit():
+    def draw(p, s):
+        p.drawLine(int(s*0.3), int(s*0.2), int(s*0.3), int(s*0.8))
+        p.drawLine(int(s*0.5), int(s*0.5), int(s*0.9), int(s*0.5))
+        p.drawLine(int(s*0.7), int(s*0.3), int(s*0.9), int(s*0.5))
+        p.drawLine(int(s*0.7), int(s*0.7), int(s*0.9), int(s*0.5))
+    return _draw_icon(draw, "#ed4245")
 
 class SystemTrayIcon(QSystemTrayIcon):
     def __init__(self, presence_manager, texts, config_manager, parent=None):
@@ -64,12 +140,12 @@ class SystemTrayIcon(QSystemTrayIcon):
                 game_name = game_name[:17] + "..."
             force_text = f"Stop forcing: {game_name}"
             
-        force_action = QAction(force_text, self.menu)
+        force_action = QAction(icon_stop() if self.pm.forced_game else icon_play(), force_text, self.menu)
         force_action.triggered.connect(self.open_game_picker)
         self.menu.addAction(force_action)
         
         # Obtain Cookie
-        cookie_action = QAction(TEXTS.get("tray_get_cookie", "Obtain Steam cookie"), self.menu)
+        cookie_action = QAction(icon_cookie(), TEXTS.get("tray_get_cookie", "Obtain Steam cookie"), self.menu)
         cookie_action.triggered.connect(self.obtain_cookie)
         self.menu.addAction(cookie_action)
         
@@ -81,12 +157,12 @@ class SystemTrayIcon(QSystemTrayIcon):
             # Limit length
             if len(gname) > 25: gname = gname[:22] + "..."
             
-            cp_action = QAction(f"Custom Presence: {gname}", self.menu)
+            cp_action = QAction(icon_play(), f"Custom Presence: {gname}", self.menu)
             cp_action.triggered.connect(self.open_custom_presence_dialog)
             self.menu.addAction(cp_action)
 
         # Configuration Submenu
-        config_menu = self.menu.addMenu(TEXTS.get("tray_config", "Configuration"))
+        config_menu = self.menu.addMenu(icon_config(), TEXTS.get("tray_config", "Configuration"))
         
         # 1. Start with Windows
         start_win_action = QAction(TEXTS.get("config_start_windows", "Start with Windows"), self.menu, checkable=True)
@@ -111,12 +187,12 @@ class SystemTrayIcon(QSystemTrayIcon):
 
         # Sync Games
         sync_text = TEXTS.get("tray_sync_games", "Sync games")
-        sync_action = QAction(sync_text, self.menu)
+        sync_action = QAction(icon_sync(), sync_text, self.menu)
         sync_action.triggered.connect(self.sync_games)
         self.menu.addAction(sync_action)
         
         # Open Logs
-        logs_action = QAction(TEXTS.get("tray_open_logs", "Open logs"), self.menu)
+        logs_action = QAction(icon_log(), TEXTS.get("tray_open_logs", "Open logs"), self.menu)
         logs_action.triggered.connect(self.open_logs)
         self.menu.addAction(logs_action)
 
@@ -128,7 +204,7 @@ class SystemTrayIcon(QSystemTrayIcon):
         self.menu.addSeparator()
         
         # Exit
-        exit_action = QAction(TEXTS.get("tray_exit", "Exit"), self.menu)
+        exit_action = QAction(icon_exit(), TEXTS.get("tray_exit", "Exit"), self.menu)
         exit_action.triggered.connect(self.exit_app)
         self.menu.addAction(exit_action)
 
@@ -423,7 +499,7 @@ class SystemTrayIcon(QSystemTrayIcon):
 
         if not getattr(self, '_download_progress_dlg', None):
             self._download_progress_dlg = QProgressDialog("Downloading game list...", "Cancel", 0, total if total > 0 else 0, None)
-            self._download_progress_dlg.setStyleSheet(GAMING_STYLESHEET)
+            self._download_progress_dlg.setStyleSheet(load_global_stylesheet())
             self._download_progress_dlg.setWindowModality(Qt.WindowModal)
             self._download_progress_dlg.setMinimumDuration(1500) # Only show if download takes more than 1.5s
             self._download_progress_dlg.setAutoReset(False)
@@ -462,7 +538,7 @@ class SystemTrayIcon(QSystemTrayIcon):
         
         # Create Progress Dialog
         self.progress = QProgressDialog("Syncing games...", "Cancel", 0, 100, None)
-        self.progress.setStyleSheet(GAMING_STYLESHEET)
+        self.progress.setStyleSheet(load_global_stylesheet())
         self.progress.setWindowModality(Qt.WindowModal)
         self.progress.setMinimumDuration(0)
         self.progress.setValue(0)
