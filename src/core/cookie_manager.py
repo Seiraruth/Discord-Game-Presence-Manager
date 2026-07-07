@@ -52,7 +52,7 @@ class CookieManager:
                     return cookie.value
             logger.info("⚠️ No se encontró cookie steamLoginSecure en perfiles accesibles por browser_cookie3.")
         except Exception as e:
-            logger.debug(f"browser_cookie3 fallo: {e}")
+            logger.debug(f"browser_cookie3 failed: {e}")
         return None
     
     def close_edge_processes(self):
@@ -151,7 +151,7 @@ class CookieManager:
             # Detecta exactamente el error de versión
             if "only supports Microsoft Edge version" in msg or "Unable to obtain driver for MicrosoftEdge" in msg:
                 if _is_retry:
-                    logger.error("❌ Ya se intentó actualizar el WebDriver y falló. Abortando para evitar bucle infinito.")
+                    logger.error("❌ WebDriver update already tried and failed. Aborting to avoid infinite loop.")
                     return None
 
                 logger.warning("🔄 Edge WebDriver desactualizado. Intentando actualizar...")

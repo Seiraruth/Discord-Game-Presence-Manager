@@ -34,7 +34,7 @@ class AppLauncher:
                 return
         updater = AppLauncher.find_discord()
         if updater:
-            logger.info(TEXTS.get("launching_discord", "🚀 Iniciando Discord..."))
+            logger.info(TEXTS.get("launching_discord", "🚀 Starting Discord..."))
             subprocess.Popen([updater, "--processStart", "Discord.exe"])
         else:
             logger.warning("⚠️ No se encontró Discord instalado en la ruta por defecto.")

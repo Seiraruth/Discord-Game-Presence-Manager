@@ -215,7 +215,7 @@ def acquire_lock() -> bool:
             pid = int(LOCK_FILE.read_text().strip())
 
             if psutil.pid_exists(pid):
-                logger.warning(f"⚠️ Ya existe otra instancia (PID {pid}). Reiniciando...")
+                logger.warning(f"⚠️ Another instance already exists (PID {pid}). Restarting...")
                 try:
                     # Cierra la instancia anterior (si es posible)
                     p = psutil.Process(pid)
@@ -242,7 +242,7 @@ def acquire_lock() -> bool:
                 # We can try to proceed.
             else:
                 LOCK_FILE.unlink()
-                logger.debug("Lock huérfano eliminado.")
+                logger.debug("Orphan lock removed.")
         except Exception:
             try:
                 LOCK_FILE.unlink()

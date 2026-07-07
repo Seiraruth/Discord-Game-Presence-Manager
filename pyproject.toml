@@ -14,7 +14,8 @@ dependencies = [
     "pywin32; sys_platform == 'win32'",
     "winshell; sys_platform == 'win32'",
     "browser-cookie3",
-    "rapidfuzz"
+    "rapidfuzz",
+    "pyqt5-qt5==5.15.2 ; sys_platform == 'win32'",
 ]
 
 [dependency-groups]

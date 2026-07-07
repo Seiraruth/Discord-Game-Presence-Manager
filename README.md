@@ -38,6 +38,9 @@ uv sync
 uv run python src/main.py
 ```
 
+> [!WARNING]
+> **Do not** run the app directly via `python src/main.py` or `py src/main.py` if you used `uv` to install dependencies! This will execute your global Python environment which lacks the required packages, resulting in `ModuleNotFoundError`. Always use `uv run` so it correctly loads the isolated virtual environment!
+
 ### Option B: Using Standard Python (`pip`)
 If you prefer standard python, you can install the dependencies manually:
 

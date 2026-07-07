@@ -3,17 +3,60 @@ import time
 from dataclasses import dataclass
 from typing import Dict, List, Tuple
 
-from PyQt5.QtCore import Qt, QTimer, QSize, QRunnable, QThreadPool, pyqtSignal, QObject, QPropertyAnimation, QEasingCurve
-from PyQt5.QtGui import QPixmap, QPainter, QColor, QImage, QIcon
+from PyQt5.QtCore import Qt, QTimer, QSize, QRunnable, QThreadPool, pyqtSignal, QObject, QPropertyAnimation, QEasingCurve, QRect
+from PyQt5.QtGui import QPixmap, QPainter, QColor, QImage, QIcon, QPainterPath
 from PyQt5.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QListWidget, QListWidgetItem,
-    QPushButton, QMessageBox, QGraphicsDropShadowEffect
+    QPushButton, QMessageBox, QGraphicsDropShadowEffect, QWidget, QStyledItemDelegate, QStyle
 )
 from rapidfuzz import fuzz
 
 from src.core.game_art_resolver import GameArtResolver
 
 logger = logging.getLogger('discord_presence_manager')
+
+class TitleBar(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFixedHeight(32)
+        self.setObjectName("titleBarWidget")
+        
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(12, 0, 12, 0)
+        layout.setSpacing(8)
+        
+        self.title_label = QLabel("Discord Presence Manager")
+        self.title_label.setObjectName("titleBarLabel")
+        layout.addWidget(self.title_label)
+        
+        layout.addStretch()
+        
+        self.min_btn = QPushButton("—")
+        self.min_btn.setObjectName("titleBarBtn")
+        self.min_btn.setFixedSize(30, 24)
+        self.min_btn.clicked.connect(self.window().showMinimized)
+        layout.addWidget(self.min_btn)
+        
+        self.close_btn = QPushButton("✕")
+        self.close_btn.setObjectName("titleBarCloseBtn")
+        self.close_btn.setFixedSize(30, 24)
+        self.close_btn.clicked.connect(self.window().close)
+        layout.addWidget(self.close_btn)
+        
+        self.start_pos = None
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.start_pos = event.globalPos()
+
+    def mouseMoveEvent(self, event):
+        if self.start_pos is not None:
+            delta = event.globalPos() - self.start_pos
+            self.window().move(self.window().pos() + delta)
+            self.start_pos = event.globalPos()
+
+    def mouseReleaseEvent(self, event):
+        self.start_pos = None
 
 @dataclass
 class GameEntry:
@@ -52,9 +95,127 @@ class ArtJob(QRunnable):
             qimage = QImage(str(path))
             if not qimage.isNull():
                 qimage = qimage.scaled(160, 220, Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation)
+                qimage = apply_rounded_corners(qimage, 8)
             else:
                 qimage = None
+                
+        if qimage is None:
+            game_name = self.game.get("name", "Unknown Game") if isinstance(self.game, dict) else getattr(self.game, "name", "Unknown Game")
+            qimage = get_placeholder_cover(game_name)
+            
         self.signals.done.emit(self.game, qimage)
+
+def get_placeholder_cover(game_name):
+    target = QImage(160, 220, QImage.Format_ARGB32_Premultiplied)
+    target.fill(Qt.transparent)
+    painter = QPainter(target)
+    painter.setRenderHint(QPainter.Antialiasing, True)
+    painter.setRenderHint(QPainter.SmoothPixmapTransform, True)
+    
+    path = QPainterPath()
+    path.addRoundedRect(0, 0, 160, 220, 8, 8)
+    painter.setClipPath(path)
+    painter.fillRect(0, 0, 160, 220, QColor("#232428"))
+    
+    pen = painter.pen()
+    pen.setColor(QColor("#9a9aa2"))
+    pen.setWidth(2)
+    painter.setPen(pen)
+    
+    # Generic gamepad drawing
+    painter.drawRoundedRect(40, 80, 80, 40, 20, 20)
+    painter.drawEllipse(50, 95, 10, 10)
+    painter.drawEllipse(60, 85, 10, 10)
+    painter.drawEllipse(90, 95, 10, 10)
+    painter.drawEllipse(100, 85, 10, 10)
+    
+    font = painter.font()
+    font.setPointSize(9)
+    painter.setFont(font)
+    text_rect = QRect(10, 140, 140, 60)
+    painter.drawText(text_rect, Qt.AlignCenter | Qt.TextWordWrap, game_name)
+    
+    painter.end()
+    return target
+
+def apply_rounded_corners(img: QImage, radius: int) -> QImage:
+    target = QImage(img.size(), QImage.Format_ARGB32_Premultiplied)
+    target.fill(Qt.transparent)
+    painter = QPainter(target)
+    painter.setRenderHint(QPainter.Antialiasing, True)
+    painter.setRenderHint(QPainter.SmoothPixmapTransform, True)
+    path = QPainterPath()
+    path.addRoundedRect(0, 0, img.width(), img.height(), radius, radius)
+    painter.setClipPath(path)
+    painter.drawImage(0, 0, img)
+    painter.end()
+    return target
+
+def create_search_icon():
+    pixmap = QPixmap(16, 16)
+    pixmap.fill(Qt.transparent)
+    painter = QPainter(pixmap)
+    painter.setRenderHint(QPainter.Antialiasing)
+    pen = painter.pen()
+    pen.setColor(QColor("#9a9aa2"))
+    pen.setWidth(2)
+    painter.setPen(pen)
+    painter.drawEllipse(2, 2, 8, 8)
+    painter.drawLine(9, 9, 14, 14)
+    painter.end()
+    return QIcon(pixmap)
+
+class GameItemDelegate(QStyledItemDelegate):
+    def paint(self, painter, option, index):
+        painter.save()
+        if option.state & QStyle.State_Selected:
+            painter.fillRect(option.rect, QColor("#2b2d31"))
+        elif option.state & QStyle.State_MouseOver:
+            painter.fillRect(option.rect, QColor("#232428"))
+            
+        rect = option.rect
+        entry = index.data(Qt.UserRole)
+        icon = index.data(Qt.DecorationRole)
+        title = entry.name if entry else ""
+        source = entry.source if entry else ""
+        
+        if icon:
+            pixmap = icon.pixmap(160, 220)
+            x = rect.x() + (rect.width() - 160) // 2
+            y = rect.y() + 8
+            painter.drawPixmap(x, y, pixmap)
+            
+        painter.setPen(QColor("#e8e8ea"))
+        font = painter.font()
+        font.setPointSize(9)
+        painter.setFont(font)
+        text_rect = QRect(rect.x(), rect.y() + 235, rect.width(), 20)
+        fm = painter.fontMetrics()
+        elided = fm.elidedText(title, Qt.ElideRight, rect.width() - 10)
+        painter.drawText(text_rect, Qt.AlignHCenter | Qt.AlignTop, elided)
+        
+        pill_width = 50
+        pill_height = 18
+        px = rect.x() + (rect.width() - pill_width) // 2
+        py = text_rect.bottom() + 4
+        bg_color = QColor("#5865f2") if source.lower() == "discord" or source.lower() == "steam" else QColor("#3b3d42")
+        
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(bg_color)
+        painter.drawRoundedRect(px, py, pill_width, pill_height, 9, 9)
+        
+        painter.setPen(QColor("#ffffff"))
+        pill_font = painter.font()
+        pill_font.setPointSize(7)
+        pill_font.setBold(True)
+        painter.setFont(pill_font)
+        painter.drawText(px, py, pill_width, pill_height, Qt.AlignCenter, source.upper())
+        
+        painter.restore()
+
+    def sizeHint(self, option, index):
+        return QSize(170, 290)
 
 class GamePickerWindow(QDialog):
     def __init__(self, pm, config_manager, tray_icon=None, parent=None):
@@ -74,10 +235,6 @@ class GamePickerWindow(QDialog):
         self._cover_batch_timer.setInterval(100)
         self._cover_batch_timer.timeout.connect(self._process_cover_batch)
         self._max_visible_results = int(self._get_setting("game_picker_max_visible_results", 120) or 120)
-        self._search_limit = min(max(int(self._get_setting("game_picker_search_limit", 50) or 50), 1), 50)
-        self._empty_limit = min(max(int(self._get_setting("game_picker_empty_limit", 24) or 24), 1), 24)
-        self._cover_initial_batch_size = min(max(int(self._get_setting("game_art_initial_batch_size", 4) or 4), 1), 4)
-        self._cover_batch_size = min(max(int(self._get_setting("game_art_batch_size", 2) or 2), 1), 2)
         self._search_limit = int(self._get_setting("game_picker_search_limit", 60) or 60)
         self._empty_limit = int(self._get_setting("game_picker_empty_limit", 40) or 40)
         self._cover_initial_batch_size = int(self._get_setting("game_art_initial_batch_size", 8) or 8)
@@ -91,23 +248,31 @@ class GamePickerWindow(QDialog):
         self._visible_keys = set()
         self._last_games_signature = None
         self._discord_entries_loaded = False
-        self._icon_cache: Dict[Tuple[str, str, str], object] = {}
-        self._visible_keys = set()
-        self._in_flight_art = set()
-        self._last_games_signature = None
 
         self.setWindowTitle("Force Game")
         self.resize(980, 700)
+        self.setWindowFlags(self.windowFlags() | Qt.FramelessWindowHint)
 
-        lay = QVBoxLayout(self)
-        lay.setContentsMargins(24, 24, 24, 24)
+        main_lay = QVBoxLayout(self)
+        main_lay.setContentsMargins(0, 0, 0, 0)
+        main_lay.setSpacing(0)
+        
+        self.title_bar = TitleBar(self)
+        main_lay.addWidget(self.title_bar)
+        
+        content_widget = QWidget()
+        lay = QVBoxLayout(content_widget)
+        lay.setContentsMargins(24, 24, 24, 32)
         lay.setSpacing(16)
+        
+        main_lay.addWidget(content_widget, 1)
         
         title_label = QLabel("Force Game")
         title_label.setObjectName("titleLabel")
         lay.addWidget(title_label)
         
         self.search = QLineEdit(); self.search.setPlaceholderText("Search games...")
+        self.search.addAction(create_search_icon(), QLineEdit.LeadingPosition)
         
         # Add subtle drop shadow to search bar
         shadow_search = QGraphicsDropShadowEffect()
@@ -126,6 +291,7 @@ class GamePickerWindow(QDialog):
         lay.addWidget(self.results_status)
 
         self.list = QListWidget()
+        self.list.setItemDelegate(GameItemDelegate(self.list))
         
         # Add subtle drop shadow to list widget
         shadow_list = QGraphicsDropShadowEffect()
@@ -165,14 +331,6 @@ class GamePickerWindow(QDialog):
         self.close_btn.clicked.connect(self.close)
         if hasattr(self.pm, "sync_finished"):
             self.pm.sync_finished.connect(self._on_sync_finished)
-
-        logger.debug("Game picker UI constructed")
-        QTimer.singleShot(0, self.initial_load)
-
-
-        logger.debug("Game picker UI constructed")
-        QTimer.singleShot(0, self.initial_load)
-
 
         logger.debug("Game picker UI constructed")
         QTimer.singleShot(0, self.initial_load)
@@ -304,7 +462,7 @@ class GamePickerWindow(QDialog):
         self.list.setUpdatesEnabled(False)
         try:
             for _, e in ranked[:render_limit]:
-                item = QListWidgetItem(f"{e.name}\n{e.source}")
+                item = QListWidgetItem()
                 item.setData(Qt.UserRole, e)
                 key = self._entry_key(e)
                 item.setData(Qt.UserRole + 1, key)

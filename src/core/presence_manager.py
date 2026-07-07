@@ -111,7 +111,7 @@ class PresenceManager(QObject):
         - discord_fake_game
         - discord_quests
         """
-        logger.info("🧹 Limpiando procesos fake residuales...")
+        logger.info("🧹 Cleaning up residual fake processes...")
         temp_dirs = [
             str(Path(tempfile.gettempdir()) / "discord_fake_game").lower(),
             str(Path(tempfile.gettempdir()) / "discord_quests").lower()
@@ -145,9 +145,9 @@ class PresenceManager(QObject):
             logger.error(f"Error en limpieza inicial: {e}")
         
         if count > 0:
-            logger.info(f"✅ Se limpiaron {count} procesos residuales.")
+            logger.info(f"✅ Cleared {count} residual processes.")
         else:
-            logger.info("✅ No se encontraron procesos residuales.")
+            logger.info("✅ No residual processes found.")
 
     def update_cookie(self, new_cookie: str):
         if new_cookie:
@@ -156,7 +156,7 @@ class PresenceManager(QObject):
             logger.info("🍪 Cookie actualizada en PresenceManager y Scraper.")
         
     def start_monitoring(self):
-        logger.info("🟢 Iniciando monitor de presencia...")
+        logger.info("🟢 Starting presence monitor...")
         self.timer.start(self.update_interval * 1000)
 
         # Solo iniciar sync si hay juegos con falta de datos y tras 5s para dejar iniciar la app
@@ -197,7 +197,7 @@ class PresenceManager(QObject):
         Recorre todos los juegos en la configuración y, si faltan datos (client_id, executable_path),
         intenta buscarlos en el caché de Discord.
         """
-        logger.info(f"🔄 Iniciando sincronización masiva de juegos con Discord (Force={force_download})...")
+        logger.info(f"🔄 Starting massive game sync with Discord (Force={force_download})...")
         self._cancel_sync_flag = False
         try:
             apps = self._fetch_discord_apps_cached(force_download=force_download)
@@ -349,10 +349,10 @@ class PresenceManager(QObject):
             self.rpc = Presence(client_id)
             self.rpc.connect()
             self._connected_client_id = client_id
-            logger.info(f"✅ Conectado a Discord RPC con client_id={client_id}")
+            logger.info(f"✅ Connected to Discord RPC with client_id={client_id}")
         except Exception as e:
             if e == "Could not find Discord installed and running on this machine.":
-                logger.error(f"💨 Relanzando Discord...")
+                logger.error(f"💨 Relaunching Discord...")
                 AppLauncher.launch_discord()
             else:
                 logger.error(f"❌ Error conectando a Discord RPC: {e}")
@@ -413,9 +413,9 @@ class PresenceManager(QObject):
                 self.rpc.close()
                 self.rpc = None
                 self._connected_client_id = None
-                logger.info("📴 RPC desconectado temporalmente (modo forzar juego activo).")
+                logger.info("📴 RPC disconnected temporarily (forced game mode active).")
         except Exception as e:
-            logger.debug(f"Error al desconectar RPC temporalmente: {e}")
+            logger.debug(f"Error temporarily disconnecting RPC: {e}")
 
     def wait_for_file_release(self, path: Path, timeout: float = 3.0) -> bool:
         start = time.time()
@@ -456,7 +456,7 @@ class PresenceManager(QObject):
             else:
                 # Windows and Linux logic (using psutil)
                 if self.fake_proc and self.fake_proc.poll() is None:
-                    logger.info(f"🛑 Cerrando ejecutable falso (PID {self.fake_proc.pid})")
+                    logger.info(f"🛑 Closing fake executable (PID {self.fake_proc.pid})")
                     self.fake_proc.terminate()
                     try:
                         self.fake_proc.wait(timeout=3)
@@ -475,10 +475,10 @@ class PresenceManager(QObject):
                         
             if closed_any:
                 time.sleep(0.35)
-                logger.info("✅ Ejecutable falso cerrado")
+                logger.info("✅ Fake executable closed")
                 
         except Exception as e:
-            logger.error(f"❌ Error cerrando ejecutable falso: {e}")
+            logger.error(f"❌ Error closing fake executable: {e}")
         finally:
             self.fake_proc = None
             self.fake_exec_path = None
@@ -553,14 +553,14 @@ class PresenceManager(QObject):
             # We track in self.active_quests
             for gid, data in self.active_quests.items():
                 if data.get('name') == game_name and not data.get('finished'):
-                    logger.info(f"Quest ya activa para {game_name}, reiniciando timer?")
+                    logger.info(f"Quest already active for {game_name}, restarting timer?")
                     # Optional: Restart timer or ignore?
                     # Let's ignore for now or maybe duplicate?
                     # "poner multiples juegos" -> implies different games.
                     pass
 
             # Launch
-            logger.info(f"🚀 Iniciando Quest Game: {game_name} ({exec_full_path})")
+            logger.info(f"🚀 Starting Quest Game: {game_name} ({exec_full_path})")
             
             proc = None
             if IS_MACOS:
@@ -586,7 +586,7 @@ class PresenceManager(QObject):
             return game_id
 
         except Exception as e:
-            logger.error(f"❌ Error lanzando Quest Game '{game_name}': {e}")
+            logger.error(f"❌ Error launching Quest Game '{game_name}': {e}")
             return None
 
     def stop_quest_game(self, game_id, keep_in_list=False):
@@ -722,13 +722,13 @@ class PresenceManager(QObject):
                     if not self.wait_for_file_release(exec_full_path, timeout=3.0):
                         logger.error(f"❌ El archivo {exec_full_path} sigue bloqueado por otro proceso")
                         return
-                logger.info(f"🚀 Ejecutando ejecutable falso: {exec_full_path}")
+                logger.info(f"🚀 Running fake executable: {exec_full_path}")
                 proc = subprocess.Popen([str(exec_full_path)], cwd=str(exec_full_path.parent))
                 self.fake_proc = proc
                 self.fake_exec_path = exec_full_path
                 
         except Exception as e:
-            logger.error(f"❌ Error creando/ejecutando ejecutable falso: {e}")
+            logger.error(f"❌ Error creating/running fake executable: {e}")
 
     def _get_http_session(self):
         if self._http_session is None:
@@ -750,7 +750,7 @@ class PresenceManager(QObject):
                         return apps
 
             sess = self._get_http_session()
-            logger.info("⬇️ Descargando lista de aplicaciones detectables de Discord...")
+            logger.info("⬇️ Downloading list of Discord detectable applications...")
             resp = sess.get(DISCORD_DETECTABLE_URL, stream=True, timeout=15)
             if resp.status_code == 200:
                 total_size = int(resp.headers.get('content-length', 0))
@@ -781,7 +781,7 @@ class PresenceManager(QObject):
                 else:
                     logger.warning("⚠️ La respuesta de Discord no contiene aplicaciones.")
             else:
-                logger.warning(f"⚠️ Error descargando de Discord: Status {resp.status_code}")
+                logger.warning(f"⚠️ Error downloading from Discord: Status {resp.status_code}")
                 self.download_progress.emit(-1, -1)
         except Exception as e:
             logger.debug(f"Error obteniendo detectable de Discord: {e}")
@@ -863,7 +863,7 @@ class PresenceManager(QObject):
                         if not _prefilter(gnl, n_name, n_aliases):
                             continue
                     except Exception as _e:
-                        logger.debug(f"⚠️ _cheap_prefilter falló: {_e} — ignorando filtro barato y continuando.")
+                        logger.debug(f"⚠️ _cheap_prefilter failed: {_e} — ignoring cheap filter and continuing.")
                     # if _prefilter is None, we skip the cheap prefilter and let the fuzzy matching run
 
 
@@ -901,7 +901,7 @@ class PresenceManager(QObject):
                         if not _prefilter(gnl, n_name, n_aliases):
                             continue
                     except Exception as _e:
-                        logger.debug(f"⚠️ _cheap_prefilter falló: {_e} — ignorando filtro barato y continuando.")
+                        logger.debug(f"⚠️ _cheap_prefilter failed: {_e} — ignoring cheap filter and continuing.")
                 # if _prefilter is None, we skip the cheap prefilter and let the fuzzy matching run
 
 
@@ -999,7 +999,7 @@ class PresenceManager(QObject):
                     self.forced_game["executable_path"] = match["exe"]
                 logger.info(f"🔄 Forced game '{game_key}' updated live with Discord data.")
 
-            logger.info(f"✅ Discord match aplicado para '{game_key}': id={match.get('id')}, exe={match.get('exe')}")
+            logger.info(f"✅ Discord match applied for '{game_key}': id={match.get('id')}, exe={match.get('exe')}")
             return True
         except Exception as e:
             logger.error(f"❌ Error aplicando discord match: {e}")
@@ -1123,7 +1123,7 @@ class PresenceManager(QObject):
             game_info = self.forced_game
             current_time = time.time()
             if not hasattr(self, "_last_forced_log") or current_time - self._last_forced_log > 300:
-                logger.info(f"🔧 Modo forzado activo: {self.forced_game.get('name')}")
+                logger.info(f"🔧 Forced mode active: {self.forced_game.get('name')}")
                 self._last_forced_log = current_time
 
         if (hasattr(self, "_force_stop_time") and 
@@ -1341,7 +1341,7 @@ class PresenceManager(QObject):
                     self._connect_rpc(client_id)
                     logger.info("🔁 Reconectado con Discord RPC tras error de socket")
                 except Exception as e2:
-                    logger.error(f"❌ Falló la reconexión a Discord RPC: {e2}")
+                    logger.error(f"❌ Failed to reconnect to Discord RPC: {e2}")
 
         self.last_game = dict(current_game) if isinstance(current_game, dict) else current_game
         

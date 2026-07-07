@@ -11,7 +11,9 @@
     "enable_game_art_download": true,
     "steamgriddb_api_key": "",
     "game_art_cache_days": 30,
-    "recent_forced_games": [],
+    "recent_forced_games": [
+        "Persona 5 Royal"
+    ],
     "game_picker_max_visible_results": 120,
     "game_picker_search_limit": 60,
     "game_picker_empty_limit": 40,
@@ -19,7 +21,7 @@
     "game_art_batch_size": 4,
     "load_discord_cache_on_startup": false,
     "game_picker_size": [
-        980,
-        700
+        1227,
+        711
     ]
 }
