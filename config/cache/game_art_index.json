@@ -1933,5 +1933,555 @@
     "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\2471e360c94f36e2feaa427b55046fe6297e78a3.jpg",
     "ts": 1783439868.763212,
     "url": "https://cdn.akamai.steamstatic.com/steam/apps/607890/header.jpg"
+  },
+  "f42a2f6ee91658fecb3f3e65ec272ebc8cd94728": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\f42a2f6ee91658fecb3f3e65ec272ebc8cd94728.jpg",
+    "ts": 1783440492.5230463,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/230190/library_600x900.jpg"
+  },
+  "a0eebd6381172e6467be65bc5bcdc24e72cd3f6f": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\a0eebd6381172e6467be65bc5bcdc24e72cd3f6f.jpg",
+    "ts": 1783440494.4079754,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/2183900/library_600x900.jpg"
+  },
+  "cb8cbb12d14368221e8732530cb06ed2eae7cbeb": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\cb8cbb12d14368221e8732530cb06ed2eae7cbeb.jpg",
+    "ts": 1783440494.682854,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/368420/header.jpg"
+  },
+  "8e27f5bb6734a257a8cc9ea8721a041cdd187102": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\8e27f5bb6734a257a8cc9ea8721a041cdd187102.jpg",
+    "ts": 1783440494.7306721,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/219640/library_600x900.jpg"
+  },
+  "447ef55bfe0f2f8efc86d4f7d289a5e79c0c0a18": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\447ef55bfe0f2f8efc86d4f7d289a5e79c0c0a18.jpg",
+    "ts": 1783440494.7581158,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/364360/library_600x900.jpg"
+  },
+  "27cd1a5b4c918e0d89ce84eca5ff57143b38bdbd": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\27cd1a5b4c918e0d89ce84eca5ff57143b38bdbd.jpg",
+    "ts": 1783440494.7778606,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/594570/library_600x900.jpg"
+  },
+  "abb731dab10c1d90a40e4b76a79188e43dcad443": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\abb731dab10c1d90a40e4b76a79188e43dcad443.jpg",
+    "ts": 1783440494.8123622,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/356190/library_600x900.jpg"
+  },
+  "f3f831cb20a0b614905b054696710c788a97023c": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\f3f831cb20a0b614905b054696710c788a97023c.jpg",
+    "ts": 1783440494.9947114,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/6060/library_600x900.jpg"
+  },
+  "182de3440f1bcc6851e4bc25c143e08317b4e6ab": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\182de3440f1bcc6851e4bc25c143e08317b4e6ab.jpg",
+    "ts": 1783440495.0181139,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/282070/library_600x900.jpg"
+  },
+  "84d9839648d57a95684d2c062d6f04c9277bcb55": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\84d9839648d57a95684d2c062d6f04c9277bcb55.jpg",
+    "ts": 1783440495.0711267,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/438640/library_600x900.jpg"
+  },
+  "0279360fe211070b197e59addb564df54acfcdf7": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\0279360fe211070b197e59addb564df54acfcdf7.jpg",
+    "ts": 1783440495.1666353,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/462780/library_600x900.jpg"
+  },
+  "da679b87de2d4aac3d39588af6abd22d80c52a01": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\da679b87de2d4aac3d39588af6abd22d80c52a01.jpg",
+    "ts": 1783440495.4940562,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/325610/library_600x900.jpg"
+  },
+  "1c0800b7e2f4048e256c5fd5133df7e15d62f8a5": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\1c0800b7e2f4048e256c5fd5133df7e15d62f8a5.jpg",
+    "ts": 1783440495.5190568,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/32640/library_600x900.jpg"
+  },
+  "aa4eb5503174e96a0701de92e79c0bb70f222293": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\aa4eb5503174e96a0701de92e79c0bb70f222293.jpg",
+    "ts": 1783440495.765083,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/285820/library_600x900.jpg"
+  },
+  "c498a993d77ad78f3576a86ae6c269ddb1d7059b": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\c498a993d77ad78f3576a86ae6c269ddb1d7059b.jpg",
+    "ts": 1783440495.855252,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/32800/header.jpg"
+  },
+  "df516ba0d01aa4ab84143c9405a80c5de412660b": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\df516ba0d01aa4ab84143c9405a80c5de412660b.jpg",
+    "ts": 1783440495.855252,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/32800/header.jpg"
+  },
+  "9f2a0a9047157dd14438e0715722c40da1910468": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\9f2a0a9047157dd14438e0715722c40da1910468.jpg",
+    "ts": 1783440496.0045776,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/582890/library_600x900.jpg"
+  },
+  "56f4c4cc4575d68170e4347e8d52b39833e0726d": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\56f4c4cc4575d68170e4347e8d52b39833e0726d.jpg",
+    "ts": 1783440496.130562,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/220700/library_600x900.jpg"
+  },
+  "9c3040e1a4ee308bbb472f343bef9a37595578bf": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\9c3040e1a4ee308bbb472f343bef9a37595578bf.jpg",
+    "ts": 1783440496.373614,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/6020/header.jpg"
+  },
+  "56426953f700cda46bfff2e9d329c1011c277366": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\56426953f700cda46bfff2e9d329c1011c277366.jpg",
+    "ts": 1783440496.601097,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/348550/library_600x900.jpg"
+  },
+  "dc59edd645dca1c08da1e5f0b1853f77a7c0a287": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\dc59edd645dca1c08da1e5f0b1853f77a7c0a287.jpg",
+    "ts": 1783440496.7711692,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/107200/library_600x900.jpg"
+  },
+  "b41af3d16b8a347f131066528a56d8aded072d8d": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\b41af3d16b8a347f131066528a56d8aded072d8d.jpg",
+    "ts": 1783440497.029501,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/346120/library_600x900.jpg"
+  },
+  "f7b583e4ce38f8b1b233426ba5fb4f47d09905df": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\f7b583e4ce38f8b1b233426ba5fb4f47d09905df.jpg",
+    "ts": 1783440497.125109,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/40400/library_600x900.jpg"
+  },
+  "2f3212cfc246cea63682296159ced4279b8496b0": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\2f3212cfc246cea63682296159ced4279b8496b0.jpg",
+    "ts": 1783440497.2808247,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/723780/library_600x900.jpg"
+  },
+  "1451f00a3c799d6e4de227542a53a14a3e23686a": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\1451f00a3c799d6e4de227542a53a14a3e23686a.jpg",
+    "ts": 1783440497.3353055,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/750920/library_600x900.jpg"
+  },
+  "8ac410424c2e5615ce6474364149b1739821c83e": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\8ac410424c2e5615ce6474364149b1739821c83e.jpg",
+    "ts": 1783440497.416538,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/391220/library_600x900.jpg"
+  },
+  "4f24dc4d01d551b530a3723c38b1c9e3f5271569": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\4f24dc4d01d551b530a3723c38b1c9e3f5271569.jpg",
+    "ts": 1783440497.6888132,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/225020/library_600x900.jpg"
+  },
+  "06658cad75602c15ffebeab76eea37a935b3ea5e": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\06658cad75602c15ffebeab76eea37a935b3ea5e.jpg",
+    "ts": 1783440497.711205,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/684200/header.jpg"
+  },
+  "98b73a0aba7b8380463cbd9cee2ce09fe90ca463": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\98b73a0aba7b8380463cbd9cee2ce09fe90ca463.jpg",
+    "ts": 1783440497.825917,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/339230/header.jpg"
+  },
+  "4303342e35f8f97ed83462208cf4c56733f68174": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\4303342e35f8f97ed83462208cf4c56733f68174.jpg",
+    "ts": 1783440497.8964257,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/224980/library_600x900.jpg"
+  },
+  "970578d346b3eaba15b82908add70a06c2631845": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\970578d346b3eaba15b82908add70a06c2631845.jpg",
+    "ts": 1783440497.9559505,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/404680/library_600x900.jpg"
+  },
+  "659c5dc0d209408cfc8617c6b1aa51287165a68f": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\659c5dc0d209408cfc8617c6b1aa51287165a68f.jpg",
+    "ts": 1783440497.9960573,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/505630/library_600x900.jpg"
+  },
+  "c2d7a987c6c8f49b53b2cc369d81417e4d367f53": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\c2d7a987c6c8f49b53b2cc369d81417e4d367f53.jpg",
+    "ts": 1783440498.2197995,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/203160/library_600x900.jpg"
+  },
+  "9675eac0eabc9214d130e3ca24fee83d1786a90b": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\9675eac0eabc9214d130e3ca24fee83d1786a90b.jpg",
+    "ts": 1783440498.3235333,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/382310/library_600x900.jpg"
+  },
+  "e7d79b6cfb17405b174170312800bec5d1053298": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\e7d79b6cfb17405b174170312800bec5d1053298.jpg",
+    "ts": 1783440498.348788,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/92800/library_600x900.jpg"
+  },
+  "3c57ee6275953302c828203d6b5ae20e4188c1ae": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\3c57ee6275953302c828203d6b5ae20e4188c1ae.jpg",
+    "ts": 1783440498.540873,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/876900/header.jpg"
+  },
+  "714ed48e3b9887941e174fafbbc8ee4f6579cf47": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\714ed48e3b9887941e174fafbbc8ee4f6579cf47.jpg",
+    "ts": 1783440498.5629976,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/225300/library_600x900.jpg"
+  },
+  "4542f5c6804971a556d4cdcad5b99e6b1163bdf8": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\4542f5c6804971a556d4cdcad5b99e6b1163bdf8.jpg",
+    "ts": 1783440499.0375714,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/307780/library_600x900.jpg"
+  },
+  "f97ba73282c4c4186fdce6eb3cee14ffe0e0986b": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\f97ba73282c4c4186fdce6eb3cee14ffe0e0986b.jpg",
+    "ts": 1783440499.3034158,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/504050/library_600x900.jpg"
+  },
+  "e3303d194f8dae627eb913149b89f2f8281d8793": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\e3303d194f8dae627eb913149b89f2f8281d8793.jpg",
+    "ts": 1783440499.3034158,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/237110/header.jpg"
+  },
+  "65a2876ab5c2c57e7155f5aa970d429d41ef6c41": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\65a2876ab5c2c57e7155f5aa970d429d41ef6c41.jpg",
+    "ts": 1783440499.4742284,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/108600/library_600x900.jpg"
+  },
+  "20583c45a04a0697e589c2bb52977333e488e8bd": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\20583c45a04a0697e589c2bb52977333e488e8bd.jpg",
+    "ts": 1783440499.6781769,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/209670/library_600x900.jpg"
+  },
+  "c2a54773a029f395cf59324ecec630ad25aafa3d": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\c2a54773a029f395cf59324ecec630ad25aafa3d.jpg",
+    "ts": 1783440499.733507,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/292910/library_600x900.jpg"
+  },
+  "e70c2f9d1369c892fcdf507046eb2b0340a48185": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\e70c2f9d1369c892fcdf507046eb2b0340a48185.jpg",
+    "ts": 1783440500.809372,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/611500/library_600x900.jpg"
+  },
+  "670ea942a9e5abaf2612e7a9d4eb39be660bf7e2": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\670ea942a9e5abaf2612e7a9d4eb39be660bf7e2.jpg",
+    "ts": 1783440500.8179603,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/270550/library_600x900.jpg"
+  },
+  "651b617bb3806a2ab3b4d6fb43d60f00b33a11d5": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\651b617bb3806a2ab3b4d6fb43d60f00b33a11d5.jpg",
+    "ts": 1783440500.8199773,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/266840/library_600x900.jpg"
+  },
+  "d750522a95ec3a36184765095c15e265c41dc9ff": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\d750522a95ec3a36184765095c15e265c41dc9ff.jpg",
+    "ts": 1783440501.045301,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/462930/header.jpg"
+  },
+  "fab3b10207f488bf8f97f7ccbb2a238231788067": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\fab3b10207f488bf8f97f7ccbb2a238231788067.jpg",
+    "ts": 1783440581.3646748,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/304390/library_600x900.jpg"
+  },
+  "77b1ec94d217fa6292b59edca22283b988ed8da2": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\77b1ec94d217fa6292b59edca22283b988ed8da2.jpg",
+    "ts": 1783440581.623738,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/624090/library_600x900.jpg"
+  },
+  "a3f88de8626888cb8eaeb3f940d3de3c36a0692b": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\a3f88de8626888cb8eaeb3f940d3de3c36a0692b.jpg",
+    "ts": 1783440581.7585647,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/482730/library_600x900.jpg"
+  },
+  "ca3f91986d840d4f73546e1694775623c97b0b92": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\ca3f91986d840d4f73546e1694775623c97b0b92.jpg",
+    "ts": 1783440582.1045356,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/505040/library_600x900.jpg"
+  },
+  "bb18abda4ff7e2985ceab1ca0e2b8d48bc72a342": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\bb18abda4ff7e2985ceab1ca0e2b8d48bc72a342.jpg",
+    "ts": 1783440582.3220813,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/410900/library_600x900.jpg"
+  },
+  "6d17ad961ed1dc7a23eaa55f54671ee503dac844": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\6d17ad961ed1dc7a23eaa55f54671ee503dac844.jpg",
+    "ts": 1783440582.385418,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/231670/library_600x900.jpg"
+  },
+  "21f2ecc83ee9e0566ae76a0564266ada7af202f2": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\21f2ecc83ee9e0566ae76a0564266ada7af202f2.jpg",
+    "ts": 1783440582.4368947,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/668980/library_600x900.jpg"
+  },
+  "b29941a90a990e2eb7a6c7aaaceccaf7ad1ab3fa": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\b29941a90a990e2eb7a6c7aaaceccaf7ad1ab3fa.jpg",
+    "ts": 1783440582.4701445,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/527230/library_600x900.jpg"
+  },
+  "b3993cba0b65cb50b1882b24daa2961de6c5fcc8": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\b3993cba0b65cb50b1882b24daa2961de6c5fcc8.jpg",
+    "ts": 1783440582.473695,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/378120/library_600x900.jpg"
+  },
+  "804e0808ee8340115801d0792a9520a0a2446607": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\804e0808ee8340115801d0792a9520a0a2446607.jpg",
+    "ts": 1783440582.5427349,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/1551360/library_600x900.jpg"
+  },
+  "6edeae2d5b99f7c50148eb48ac973b90d0cd7579": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\6edeae2d5b99f7c50148eb48ac973b90d0cd7579.jpg",
+    "ts": 1783440582.6825852,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/678950/library_600x900.jpg"
+  },
+  "baa19a10d01771ca93f2aab2f565c39bcdf273ca": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\baa19a10d01771ca93f2aab2f565c39bcdf273ca.jpg",
+    "ts": 1783440582.9439006,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/334210/header.jpg"
+  },
+  "a45195153bd431c3fc4e40f7ffe935c6aebe8e8b": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\a45195153bd431c3fc4e40f7ffe935c6aebe8e8b.jpg",
+    "ts": 1783440582.971747,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/384300/library_600x900.jpg"
+  },
+  "fce0e2872f5280922db2b0f4a853935be9b68df0": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\fce0e2872f5280922db2b0f4a853935be9b68df0.jpg",
+    "ts": 1783440583.1930573,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/3020/library_600x900.jpg"
+  },
+  "0782173bc65fa9e4e27ad4fab9888e28b5e0723c": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\0782173bc65fa9e4e27ad4fab9888e28b5e0723c.jpg",
+    "ts": 1783440583.3491473,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/3590/library_600x900.jpg"
+  },
+  "224fbef996c8cbecfef21da5526265144a588495": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\224fbef996c8cbecfef21da5526265144a588495.jpg",
+    "ts": 1783440583.7747166,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/351970/header.jpg"
+  },
+  "b795d3c1b39e848b2a037fd6e8c474f414dabd55": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\b795d3c1b39e848b2a037fd6e8c474f414dabd55.jpg",
+    "ts": 1783440584.2793434,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/362680/library_600x900.jpg"
+  },
+  "1e4bde689b7dcc4e525f3cdaada281c5ca0641f3": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\1e4bde689b7dcc4e525f3cdaada281c5ca0641f3.jpg",
+    "ts": 1783440584.358125,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/2840770/library_600x900.jpg"
+  },
+  "cb2a0c5b1978bffcd8ec1cfc7e2c92982f2b49e4": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\cb2a0c5b1978bffcd8ec1cfc7e2c92982f2b49e4.jpg",
+    "ts": 1783440584.6550703,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/7200/library_600x900.jpg"
+  },
+  "ea3de3d58c1100444901fd1bd327bbb455efa55d": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\ea3de3d58c1100444901fd1bd327bbb455efa55d.jpg",
+    "ts": 1783440584.691057,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/11020/library_600x900.jpg"
+  },
+  "8f94eb7c9611d25fcf873e9185eaef9948902102": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\8f94eb7c9611d25fcf873e9185eaef9948902102.jpg",
+    "ts": 1783440619.7524452,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/320240/library_600x900.jpg"
+  },
+  "89fa41973455a3f94d0f82f1172d5d5b780ed4ad": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\89fa41973455a3f94d0f82f1172d5d5b780ed4ad.jpg",
+    "ts": 1783440619.8600159,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/674020/library_600x900.jpg"
+  },
+  "4e8d07377e5d14ba37b803890676bbef41f2d78b": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\4e8d07377e5d14ba37b803890676bbef41f2d78b.jpg",
+    "ts": 1783440619.9297764,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/318530/library_600x900.jpg"
+  },
+  "a9e5eab385861728487033b35407aa4e6b0ddbf2": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\a9e5eab385861728487033b35407aa4e6b0ddbf2.jpg",
+    "ts": 1783440620.0448184,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/532170/header.jpg"
+  },
+  "632fe8a62fc827f310593aa7051e2fcbf4dc275a": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\632fe8a62fc827f310593aa7051e2fcbf4dc275a.jpg",
+    "ts": 1783440620.2068243,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/3564740/library_600x900.jpg"
+  },
+  "73389631f4b4671d142597c71cd54a23de5881be": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\73389631f4b4671d142597c71cd54a23de5881be.jpg",
+    "ts": 1783440620.6821659,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/460930/library_600x900.jpg"
+  },
+  "6f03cd983d49e69c9cbed11b509229694e291aa1": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\6f03cd983d49e69c9cbed11b509229694e291aa1.jpg",
+    "ts": 1783440620.9393077,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/55230/library_600x900.jpg"
+  },
+  "3ad7884e1a6d6e503286f58c8723cacb1bb170c3": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\3ad7884e1a6d6e503286f58c8723cacb1bb170c3.jpg",
+    "ts": 1783440620.964726,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/240720/library_600x900.jpg"
+  },
+  "a38b1795ba04f4f3dfe547e86a4d0dc8a959125f": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\a38b1795ba04f4f3dfe547e86a4d0dc8a959125f.jpg",
+    "ts": 1783440620.986197,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/241930/library_600x900.jpg"
+  },
+  "e06bd6102598db7757db1e04ad9246b62d901cfd": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\e06bd6102598db7757db1e04ad9246b62d901cfd.jpg",
+    "ts": 1783440621.0116754,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/383870/library_600x900.jpg"
+  },
+  "bdd6413752a826f5a548c71da6b360419ecc2156": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\bdd6413752a826f5a548c71da6b360419ecc2156.jpg",
+    "ts": 1783440621.3190742,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/251430/library_600x900.jpg"
+  },
+  "b519c0151237b94c04b6dce4f45d8aab983a1f8a": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\b519c0151237b94c04b6dce4f45d8aab983a1f8a.jpg",
+    "ts": 1783440621.362008,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/535850/library_600x900.jpg"
+  },
+  "b93fd72b5d93fd50ba135a8ee2c0737d6fdee8cc": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\b93fd72b5d93fd50ba135a8ee2c0737d6fdee8cc.jpg",
+    "ts": 1783440621.362008,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/403970/library_600x900.jpg"
+  },
+  "f5f65f777c2e3696e31097f2ea80ddbfbee18057": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\f5f65f777c2e3696e31097f2ea80ddbfbee18057.jpg",
+    "ts": 1783440621.372378,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/241560/header.jpg"
+  },
+  "9265913f7d94bc2e9554890eb0bcf466bc3b3ee5": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\9265913f7d94bc2e9554890eb0bcf466bc3b3ee5.jpg",
+    "ts": 1783440621.6151414,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/219910/library_600x900.jpg"
+  },
+  "67e643d70c98144df823480df6d8004d7d47a272": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\67e643d70c98144df823480df6d8004d7d47a272.jpg",
+    "ts": 1783440621.695942,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/20920/library_600x900.jpg"
+  },
+  "0db522c2a63a3c3c6c30abf2dedcaa3b8abdb457": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\0db522c2a63a3c3c6c30abf2dedcaa3b8abdb457.jpg",
+    "ts": 1783440621.7198453,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/20900/library_600x900.jpg"
+  },
+  "d19a43813f3c809c48cc7d1118dc5c2ade3768b0": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\d19a43813f3c809c48cc7d1118dc5c2ade3768b0.jpg",
+    "ts": 1783440621.782506,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/32670/library_600x900.jpg"
+  },
+  "91c810e4efc846f9a88912adae15496c61eaa2b8": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\91c810e4efc846f9a88912adae15496c61eaa2b8.jpg",
+    "ts": 1783440621.838006,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/677120/library_600x900.jpg"
+  },
+  "c8bb2a62348edfc93b8e99de6422685cff5e8cd7": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\c8bb2a62348edfc93b8e99de6422685cff5e8cd7.jpg",
+    "ts": 1783440621.8949544,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/712100/library_600x900.jpg"
+  },
+  "df890e48afb4801fee93a60cc4f3772421e4dfef": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\df890e48afb4801fee93a60cc4f3772421e4dfef.jpg",
+    "ts": 1783440621.954183,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/342200/library_600x900.jpg"
+  },
+  "9748b9f7c8b1d5ac5202a9d1dc13ede7c10f7457": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\9748b9f7c8b1d5ac5202a9d1dc13ede7c10f7457.jpg",
+    "ts": 1783440622.0402021,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/22320/library_600x900.jpg"
+  },
+  "357b65684b0b8111d2f0e7d611d71c2b6cacf6d0": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\357b65684b0b8111d2f0e7d611d71c2b6cacf6d0.jpg",
+    "ts": 1783440622.097309,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/337320/library_600x900.jpg"
+  },
+  "fd5ad0a57ffb0677f0ff31771217cdc72d0830a8": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\fd5ad0a57ffb0677f0ff31771217cdc72d0830a8.jpg",
+    "ts": 1783440622.162345,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/4500/library_600x900.jpg"
+  },
+  "64102168ce9a4875447c2471711f232b7f633d14": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\64102168ce9a4875447c2471711f232b7f633d14.jpg",
+    "ts": 1783440622.2347567,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/32440/library_600x900.jpg"
+  },
+  "cd55f1b50c7405da15385de7b953512fe32b1afd": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\cd55f1b50c7405da15385de7b953512fe32b1afd.jpg",
+    "ts": 1783440622.2994044,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/25000/library_600x900.jpg"
+  },
+  "9e40d34b9732e75bac4cf793e9c86ac35296519b": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\9e40d34b9732e75bac4cf793e9c86ac35296519b.jpg",
+    "ts": 1783440622.5621064,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/429050/library_600x900.jpg"
+  },
+  "98f745a078c30d30fbe741ea26be1fc71fd59c3c": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\98f745a078c30d30fbe741ea26be1fc71fd59c3c.jpg",
+    "ts": 1783440622.6390421,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/459220/library_600x900.jpg"
+  },
+  "bf192b45d1590c8a85bd6fcba235949c58c388fb": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\bf192b45d1590c8a85bd6fcba235949c58c388fb.jpg",
+    "ts": 1783440622.88139,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/760760/header.jpg"
+  },
+  "2b259b984fbea73afe3e9882d42f7b2792f1e4fa": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\2b259b984fbea73afe3e9882d42f7b2792f1e4fa.jpg",
+    "ts": 1783440622.9493365,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/225080/library_600x900.jpg"
+  },
+  "6af8242b52f87545561b450febc76ae9f046e29c": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\6af8242b52f87545561b450febc76ae9f046e29c.jpg",
+    "ts": 1783440623.0157259,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/239070/header.jpg"
+  },
+  "dfb058e3804faf354da4a192566c33b729e6fd5c": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\dfb058e3804faf354da4a192566c33b729e6fd5c.jpg",
+    "ts": 1783440623.1147606,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/599390/library_600x900.jpg"
+  },
+  "ce235792a66884fd408a1bb6949f5ee34b701497": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\ce235792a66884fd408a1bb6949f5ee34b701497.jpg",
+    "ts": 1783440623.3022926,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/15750/library_600x900.jpg"
+  },
+  "394241af9b36a32461c5a6040d98aab02330d69f": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\394241af9b36a32461c5a6040d98aab02330d69f.jpg",
+    "ts": 1783440623.3209615,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/202750/library_600x900.jpg"
+  },
+  "904f3bdee96a9010949dfb16794638d673958875": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\904f3bdee96a9010949dfb16794638d673958875.jpg",
+    "ts": 1783440623.4619625,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/32380/header.jpg"
+  },
+  "f24014187133dcf57276dfcd5699bbd0c59ed64a": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\f24014187133dcf57276dfcd5699bbd0c59ed64a.jpg",
+    "ts": 1783440623.6073797,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/356430/library_600x900.jpg"
+  },
+  "f13363246870976c98537b33e396f8a03d9e0453": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\f13363246870976c98537b33e396f8a03d9e0453.jpg",
+    "ts": 1783440623.6541476,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/307670/library_600x900.jpg"
+  },
+  "afd02f3eb71048a616fa948b72994ac00124b953": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\afd02f3eb71048a616fa948b72994ac00124b953.jpg",
+    "ts": 1783440623.7102706,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/248390/library_600x900.jpg"
+  },
+  "78e9e030b7c478a91149c12ae48d34c91073ab29": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\78e9e030b7c478a91149c12ae48d34c91073ab29.jpg",
+    "ts": 1783440623.8733652,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/323320/header.jpg"
+  },
+  "c7b1fe6657a71fcea5008b2d6d0212d15dc3e4f3": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\c7b1fe6657a71fcea5008b2d6d0212d15dc3e4f3.jpg",
+    "ts": 1783440624.0183544,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/215280/library_600x900.jpg"
+  },
+  "2223669b42004b8ba9385d30d7e3ec672019dfb8": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\2223669b42004b8ba9385d30d7e3ec672019dfb8.jpg",
+    "ts": 1783440624.1580272,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/242640/library_600x900.jpg"
+  },
+  "8127cf011d032b63d72301b1e1461694105eb08a": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\8127cf011d032b63d72301b1e1461694105eb08a.jpg",
+    "ts": 1783440624.2826803,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/952440/header.jpg"
+  },
+  "480a78aefb1c86da5ddb5d9f80c84f399aae35a7": {
+    "path": "E:\\Visual Studio\\Source\\Discord-Game-Presence-Manager\\config\\cache\\game_art\\480a78aefb1c86da5ddb5d9f80c84f399aae35a7.jpg",
+    "ts": 1783440624.4796002,
+    "url": "https://cdn.akamai.steamstatic.com/steam/apps/407290/header.jpg"
   }
 }

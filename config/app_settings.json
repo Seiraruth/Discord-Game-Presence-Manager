@@ -12,6 +12,9 @@
     "steamgriddb_api_key": "",
     "game_art_cache_days": 30,
     "recent_forced_games": [
+        "Where Winds Meet",
+        "Forza Horizon 5",
+        "ACE COMBAT™ 7: SKIES steam",
         "Wuthering Waves",
         "Far Cry 5",
         "Persona 5 Royal"
@@ -23,7 +26,7 @@
     "game_art_batch_size": 4,
     "load_discord_cache_on_startup": false,
     "game_picker_size": [
-        1227,
-        711
+        980,
+        700
     ]
 }

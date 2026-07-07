@@ -7,7 +7,8 @@ from PyQt5.QtCore import Qt, QTimer, QSize, QRunnable, QThreadPool, pyqtSignal, 
 from PyQt5.QtGui import QPixmap, QPainter, QColor, QImage, QIcon, QPainterPath
 from PyQt5.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QListWidget, QListWidgetItem,
-    QPushButton, QMessageBox, QGraphicsDropShadowEffect, QWidget, QStyledItemDelegate, QStyle
+    QPushButton, QMessageBox, QGraphicsDropShadowEffect, QWidget, QStyledItemDelegate, QStyle,
+    QFrame
 )
 from rapidfuzz import fuzz
 
@@ -15,34 +16,54 @@ from src.core.game_art_resolver import GameArtResolver
 
 logger = logging.getLogger('discord_presence_manager')
 
+class AccentDot(QWidget):
+    """Tiny filled circle used as a status indicator in the title bar."""
+    def __init__(self, color="#5865f2", size=6, parent=None):
+        super().__init__(parent)
+        self._color = QColor(color)
+        self.setFixedSize(size, size)
+
+    def paintEvent(self, event):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.Antialiasing)
+        p.setPen(Qt.NoPen)
+        p.setBrush(self._color)
+        p.drawEllipse(0, 0, self.width(), self.height())
+        p.end()
+
 class TitleBar(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setFixedHeight(32)
+        self.setFixedHeight(36)
         self.setObjectName("titleBarWidget")
-        
+
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(12, 0, 12, 0)
+        layout.setContentsMargins(14, 0, 8, 0)
         layout.setSpacing(8)
-        
+
+        self.accent_dot = AccentDot(parent=self)
+        layout.addWidget(self.accent_dot)
+
         self.title_label = QLabel("Discord Presence Manager")
         self.title_label.setObjectName("titleBarLabel")
         layout.addWidget(self.title_label)
-        
+
         layout.addStretch()
-        
+
         self.min_btn = QPushButton("—")
         self.min_btn.setObjectName("titleBarBtn")
-        self.min_btn.setFixedSize(30, 24)
+        self.min_btn.setFixedSize(36, 28)
+        self.min_btn.setCursor(Qt.PointingHandCursor)
         self.min_btn.clicked.connect(self.window().showMinimized)
         layout.addWidget(self.min_btn)
-        
+
         self.close_btn = QPushButton("✕")
         self.close_btn.setObjectName("titleBarCloseBtn")
-        self.close_btn.setFixedSize(30, 24)
+        self.close_btn.setFixedSize(36, 28)
+        self.close_btn.setCursor(Qt.PointingHandCursor)
         self.close_btn.clicked.connect(self.window().close)
         layout.addWidget(self.close_btn)
-        
+
         self.start_pos = None
 
     def mousePressEvent(self, event):
@@ -107,35 +128,71 @@ class ArtJob(QRunnable):
         self.signals.done.emit(self.game, qimage, self.key)
 
 def get_placeholder_cover(game_name):
-    target = QImage(160, 220, QImage.Format_ARGB32_Premultiplied)
+    W, H, R = 160, 220, 8
+    target = QImage(W, H, QImage.Format_ARGB32_Premultiplied)
     target.fill(Qt.transparent)
     painter = QPainter(target)
     painter.setRenderHint(QPainter.Antialiasing, True)
     painter.setRenderHint(QPainter.SmoothPixmapTransform, True)
-    
-    path = QPainterPath()
-    path.addRoundedRect(0, 0, 160, 220, 8, 8)
-    painter.setClipPath(path)
-    painter.fillRect(0, 0, 160, 220, QColor("#232428"))
-    
+
+    # Rounded clip
+    clip = QPainterPath()
+    clip.addRoundedRect(0, 0, W, H, R, R)
+    painter.setClipPath(clip)
+
+    # Gradient background
+    from PyQt5.QtGui import QLinearGradient
+    grad = QLinearGradient(0, 0, 0, H)
+    grad.setColorAt(0.0, QColor("#2b2d33"))
+    grad.setColorAt(1.0, QColor("#1a1b1f"))
+    painter.fillRect(0, 0, W, H, grad)
+
+    # Subtle border
+    painter.setPen(QColor(60, 62, 68))
+    painter.setBrush(Qt.NoBrush)
+    border_path = QPainterPath()
+    border_path.addRoundedRect(0.5, 0.5, W - 1, H - 1, R, R)
+    painter.drawPath(border_path)
+
+    # ── Gamepad icon (centered at y=75) ──
+    cx, cy = W // 2, 82
     pen = painter.pen()
-    pen.setColor(QColor("#9a9aa2"))
+    pen.setColor(QColor("#4f545c"))
     pen.setWidth(2)
+    pen.setCapStyle(Qt.RoundCap)
     painter.setPen(pen)
-    
-    # Generic gamepad drawing
-    painter.drawRoundedRect(40, 80, 80, 40, 20, 20)
-    painter.drawEllipse(50, 95, 10, 10)
-    painter.drawEllipse(60, 85, 10, 10)
-    painter.drawEllipse(90, 95, 10, 10)
-    painter.drawEllipse(100, 85, 10, 10)
-    
-    font = painter.font()
-    font.setPointSize(9)
-    painter.setFont(font)
-    text_rect = QRect(10, 140, 140, 60)
-    painter.drawText(text_rect, Qt.AlignCenter | Qt.TextWordWrap, game_name)
-    
+    painter.setBrush(Qt.NoBrush)
+
+    # Body
+    painter.drawRoundedRect(cx - 28, cy - 12, 56, 28, 14, 14)
+    # Grips
+    painter.drawRoundedRect(cx - 34, cy - 4, 12, 16, 6, 6)
+    painter.drawRoundedRect(cx + 22, cy - 4, 12, 16, 6, 6)
+    # D-pad (left stick area)
+    painter.drawLine(cx - 16, cy - 4, cx - 16, cy + 6)   # vertical
+    painter.drawLine(cx - 21, cy + 1, cx - 11, cy + 1)   # horizontal
+    # Right buttons
+    painter.setBrush(QColor("#4f545c"))
+    painter.drawEllipse(cx + 8, cy - 6, 5, 5)
+    painter.drawEllipse(cx + 16, cy - 2, 5, 5)
+    painter.drawEllipse(cx + 8, cy + 2, 5, 5)
+    painter.drawEllipse(cx + 12, cy - 10, 5, 5) # top
+    painter.setBrush(Qt.NoBrush)
+
+    # "No Cover Art" muted label
+    painter.setPen(QColor("#4f545c"))
+    small_font = painter.font()
+    small_font.setPointSize(7)
+    painter.setFont(small_font)
+    painter.drawText(QRect(0, cy + 24, W, 16), Qt.AlignCenter, "No Cover Art")
+
+    # Game name
+    painter.setPen(QColor("#9a9aa2"))
+    name_font = painter.font()
+    name_font.setPointSize(9)
+    painter.setFont(name_font)
+    painter.drawText(QRect(10, 140, W - 20, 65), Qt.AlignCenter | Qt.TextWordWrap, game_name)
+
     painter.end()
     return target
 
@@ -166,57 +223,86 @@ def create_search_icon():
     painter.end()
     return QIcon(pixmap)
 
+# Badge color mapping
+_BADGE_COLORS = {
+    "steam": QColor("#1b9aaa"),
+    "discord": QColor("#5865f2"),
+}
+_BADGE_DEFAULT = QColor("#3b3d42")
+
 class GameItemDelegate(QStyledItemDelegate):
     def paint(self, painter, option, index):
         painter.save()
-        if option.state & QStyle.State_Selected:
-            painter.fillRect(option.rect, QColor("#2b2d31"))
-        elif option.state & QStyle.State_MouseOver:
-            painter.fillRect(option.rect, QColor("#232428"))
-            
+        painter.setRenderHint(QPainter.Antialiasing, True)
+
         rect = option.rect
+        is_hovered = bool(option.state & QStyle.State_MouseOver)
+        is_selected = bool(option.state & QStyle.State_Selected)
+
         entry = index.data(Qt.UserRole)
         icon = index.data(Qt.DecorationRole)
         title = entry.name if entry else ""
         source = entry.source if entry else ""
-        
+
+        # ── Card area ──
+        card_x = rect.x() + (rect.width() - 160) // 2
+        card_y = rect.y() + 8
+        card_rect = QRect(card_x - 4, card_y - 4, 168, 228)
+
+        # Hover glow border
+        if is_hovered or is_selected:
+            glow_color = QColor("#5865f2")
+            glow_color.setAlpha(60 if is_hovered else 90)
+            painter.setPen(Qt.NoPen)
+            painter.setBrush(glow_color)
+            glow_path = QPainterPath()
+            glow_path.addRoundedRect(card_rect.x() - 2, card_rect.y() - 2,
+                                     card_rect.width() + 4, card_rect.height() + 4, 12, 12)
+            painter.drawPath(glow_path)
+
+        # Cover shadow
         if icon:
+            shadow_color = QColor(0, 0, 0, 50)
+            painter.setPen(Qt.NoPen)
+            painter.setBrush(shadow_color)
+            painter.drawRoundedRect(card_x + 3, card_y + 5, 160, 220, 8, 8)
+
             pixmap = icon.pixmap(160, 220)
-            x = rect.x() + (rect.width() - 160) // 2
-            y = rect.y() + 8
-            painter.drawPixmap(x, y, pixmap)
-            
-        painter.setPen(QColor("#e8e8ea"))
-        font = painter.font()
-        font.setPointSize(9)
-        painter.setFont(font)
-        text_rect = QRect(rect.x(), rect.y() + 235, rect.width(), 20)
+            painter.drawPixmap(card_x, card_y, pixmap)
+
+        # ── Title ──
+        painter.setPen(QColor("#ffffff" if is_hovered else "#e8e8ea"))
+        title_font = painter.font()
+        title_font.setPointSize(9)
+        title_font.setWeight(63)  # DemiBold
+        painter.setFont(title_font)
+        text_rect = QRect(rect.x(), rect.y() + 238, rect.width(), 20)
         fm = painter.fontMetrics()
-        elided = fm.elidedText(title, Qt.ElideRight, rect.width() - 10)
+        elided = fm.elidedText(title, Qt.ElideRight, rect.width() - 12)
         painter.drawText(text_rect, Qt.AlignHCenter | Qt.AlignTop, elided)
-        
-        pill_width = 50
-        pill_height = 18
-        px = rect.x() + (rect.width() - pill_width) // 2
+
+        # ── Source badge pill ──
+        pill_w, pill_h = 52, 18
+        px = rect.x() + (rect.width() - pill_w) // 2
         py = text_rect.bottom() + 4
-        bg_color = QColor("#5865f2") if source.lower() == "discord" or source.lower() == "steam" else QColor("#3b3d42")
-        
-        painter.setRenderHint(QPainter.Antialiasing)
+        bg_color = _BADGE_COLORS.get(source.lower(), _BADGE_DEFAULT)
+
         painter.setPen(Qt.NoPen)
         painter.setBrush(bg_color)
-        painter.drawRoundedRect(px, py, pill_width, pill_height, 9, 9)
-        
+        painter.drawRoundedRect(px, py, pill_w, pill_h, 9, 9)
+
         painter.setPen(QColor("#ffffff"))
         pill_font = painter.font()
         pill_font.setPointSize(7)
         pill_font.setBold(True)
+        pill_font.setLetterSpacing(pill_font.PercentageSpacing, 110)
         painter.setFont(pill_font)
-        painter.drawText(px, py, pill_width, pill_height, Qt.AlignCenter, source.upper())
-        
+        painter.drawText(px, py, pill_w, pill_h, Qt.AlignCenter, source.upper())
+
         painter.restore()
 
     def sizeHint(self, option, index):
-        return QSize(170, 290)
+        return QSize(178, 295)
 
 class GamePickerWindow(QDialog):
     def __init__(self, pm, config_manager, tray_icon=None, parent=None):
@@ -312,12 +398,26 @@ class GamePickerWindow(QDialog):
         self.list.setSpacing(10)
         lay.addWidget(self.list, 1)
 
+        # Divider line above buttons
+        divider = QFrame()
+        divider.setObjectName("dividerLine")
+        divider.setFrameShape(QFrame.HLine)
+        divider.setFixedHeight(1)
+        lay.addWidget(divider)
+
         btns = QHBoxLayout()
+        btns.setSpacing(12)
         self.stop_btn = QPushButton("Stop Current Presence")
+        self.stop_btn.setObjectName("primaryBtn")
+        self.stop_btn.setCursor(Qt.PointingHandCursor)
         self.sync_btn = QPushButton("Sync Games")
+        self.sync_btn.setCursor(Qt.PointingHandCursor)
         self.refresh_btn = QPushButton("Refresh Covers")
+        self.refresh_btn.setCursor(Qt.PointingHandCursor)
         self.close_btn = QPushButton("Close")
-        for b in (self.stop_btn, self.sync_btn, self.refresh_btn, self.close_btn): btns.addWidget(b)
+        self.close_btn.setCursor(Qt.PointingHandCursor)
+        for b in (self.stop_btn, self.sync_btn, self.refresh_btn, self.close_btn):
+            btns.addWidget(b)
         lay.addLayout(btns)
 
         self.search_timer = QTimer(self); self.search_timer.setSingleShot(True); self.search_timer.setInterval(250)
@@ -342,13 +442,26 @@ class GamePickerWindow(QDialog):
 
     def showEvent(self, event):
         super().showEvent(event)
+        # Slide-up + fade entrance
         self.setWindowOpacity(0.0)
+        target_geo = self.geometry()
+        start_geo = QRect(target_geo.x(), target_geo.y() + 15, target_geo.width(), target_geo.height())
+        self.setGeometry(start_geo)
+
         self.fade_anim = QPropertyAnimation(self, b"windowOpacity")
-        self.fade_anim.setDuration(150)
+        self.fade_anim.setDuration(200)
         self.fade_anim.setStartValue(0.0)
         self.fade_anim.setEndValue(1.0)
         self.fade_anim.setEasingCurve(QEasingCurve.OutCubic)
+
+        self.slide_anim = QPropertyAnimation(self, b"geometry")
+        self.slide_anim.setDuration(250)
+        self.slide_anim.setStartValue(start_geo)
+        self.slide_anim.setEndValue(target_geo)
+        self.slide_anim.setEasingCurve(QEasingCurve.OutCubic)
+
         self.fade_anim.start()
+        self.slide_anim.start()
 
     def _get_setting(self, key, default=None):
         try:
