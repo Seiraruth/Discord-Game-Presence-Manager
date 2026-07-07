@@ -585,16 +585,13 @@ class ClickableIconLabel(QLabel):
             import webbrowser
             webbrowser.open(self.url)
 
-class AboutDialog(QDialog):
+class AboutDialog(AnimatedDialog):
     def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setWindowTitle(TEXTS.get("about", "About"))
-        self.setWindowIcon(QIcon(str(ASSETS_DIR / "discord.png")))
-        self.setFixedSize(400, 250)
+        super().__init__(TEXTS.get("about", "About"), parent)
+        self.setFixedSize(400, 270)
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
                 
-        layout = QVBoxLayout()
-        layout.setContentsMargins(25, 25, 25, 25)
+        layout = self.content_layout
         layout.setSpacing(15)
         
         # Title
@@ -604,7 +601,9 @@ class AboutDialog(QDialog):
         layout.addWidget(title)
         
         # Description
-        desc = QLabel(TEXTS.get("about_desc", "This program was made by KarmaDevz, consider support the program"))
+        desc_text = TEXTS.get("about_desc", "This program was made by KarmaDevz, consider support the program")
+        desc_text = desc_text.replace("KarmaDevz", "Seiraruth")
+        desc = QLabel(desc_text)
         desc.setWordWrap(True)
         desc.setAlignment(Qt.AlignCenter)
         desc.setStyleSheet("font-size: 14px; color: #cfcfcf;")
@@ -617,34 +616,24 @@ class AboutDialog(QDialog):
         icons_layout.setSpacing(30)
         icons_layout.setAlignment(Qt.AlignCenter)
         
-        github_icon = ClickableIconLabel("github.png", "https://github.com/KarmaDevz/Discord-Game-Presence-Manager", self)
-        discord_icon = ClickableIconLabel("discord.png", "https://discord.com/users/karmadevz", self)
-        paypal_icon = ClickableIconLabel("paypal.png", "https://www.paypal.com/paypalme/KarmaDevz", self)
+        github_icon = ClickableIconLabel("github.png", "https://github.com/Seiraruth/Discord-Game-Presence-Manager", self)
+        discord_icon = ClickableIconLabel("discord.png", "https://discord.com/users/466914522771357696", self)
         
         icons_layout.addWidget(github_icon)
         icons_layout.addWidget(discord_icon)
-        icons_layout.addWidget(paypal_icon)
         
         layout.addLayout(icons_layout)
+        
         # Close Button
         self.close_btn = QPushButton(TEXTS.get("close", "Close"))
         self.close_btn.setObjectName("secondary")
         self.close_btn.clicked.connect(self.accept)
         
-        # Add a stretch before the close button to push it to the bottom
         layout.addStretch()
         
-        # We can center the close button by placing it in its own layout
         close_layout = QHBoxLayout()
         close_layout.addStretch()
         close_layout.addWidget(self.close_btn)
         close_layout.addStretch()
         
         layout.addLayout(close_layout)
-        
-        self.setLayout(layout)
-
-    def open_url(self, url):
-        import webbrowser
-        webbrowser.open(url)
-
