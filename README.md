@@ -2,7 +2,6 @@
 
 <p align="center">
   <img src="assets/asset1.jpg" width="400" alt="Main UI"/>
-  <img src="assets/discord_status.jpg" width="300" alt="Discord Status"/>
 </p>
 
 Discord Presence Manager is a highly polished, modern desktop tray app that lets you control what Discord displays as your current game/activity. It can force a selected game profile, apply custom Rich Presence fields, and optionally enrich status from Steam Rich Presence data.
