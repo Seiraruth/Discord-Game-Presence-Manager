@@ -1,7 +1,7 @@
 # Discord Presence Manager
 
 <p align="center">
-  <img src="assets/asset1.jpg" width="400" alt="Main UI"/>
+  <img src="assets/asset1.png" width="400" alt="Main UI"/>
   <img src="assets/discord_status.jpg" width="300" alt="Discord Status"/>
 </p>
 
