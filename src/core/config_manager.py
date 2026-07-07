@@ -45,10 +45,10 @@ class ConfigManager:
         self._load()
 
     def _load(self):
-        # Ruta fija al archivo que siempre queremos cargar
+        # Fixed path to the file we always want to load
         fixed_path = CONFIG_DIR / "games_config_merged.json"
         
-        # Cargar app_settings.json
+        # Load app_settings.json
         if self.app_settings_path.exists():
             data_settings = safe_json_load(self.app_settings_path)
             if isinstance(data_settings, dict):
@@ -60,32 +60,32 @@ class ConfigManager:
         else:
             save_json(self.app_settings, self.app_settings_path)
 
-        # Si no existe, mostrar error en logs pero NO abrir Tkinter
+        # If it does not exist, show error in logs but do NOT open Tkinter
         if not fixed_path.exists():
-            logger.error(f"❌ No se encontró {fixed_path}. Se cargará un JSON vacío.")
+            logger.error(f"❌ Not found: {fixed_path}. An empty JSON will be loaded.")
             self.games_config = {}
             self.games_config_path = fixed_path
             return
 
-        # Cargar JSON fijo directamente sin pedir nada al usuario
+        # Load fixed JSON directly without asking the user
         data = safe_json_load(fixed_path)
         if isinstance(data, dict):
             self.games_config = data
             self.games_config_path = fixed_path
-            logger.info(TEXTS.get("games_config_merged", "✅ games_config_merged.json cargado automáticamente: {fixed_path}").format(fixed_path=fixed_path))
+            logger.info(TEXTS.get("games_config_merged", "✅ games_config_merged.json loaded automatically: {fixed_path}").format(fixed_path=fixed_path))
             self._log_games_summary()
         else:
-            logger.warning(TEXTS.get("games_config_invalid", "⚠️ games_config_merged.json no contiene un objeto JSON válido."))
+            logger.warning(TEXTS.get("games_config_invalid", "⚠️ games_config_merged.json does not contain a valid JSON object."))
             self.games_config = {}
             self.games_config_path = fixed_path
 
     def _log_games_summary(self, verbose=False):
         count = len(self.games_config)
         if count == 0:
-            logger.warning(TEXTS.get("no_games_found", "⚠️ No se encontraron juegos en la configuración."))
+            logger.warning(TEXTS.get("no_games_found", "⚠️ No games found in configuration."))
             return
         
-        logger.info(TEXTS.get("games_loaded", "📦 Juegos cargados: {count}").format(count=count))
+        logger.info(TEXTS.get("games_loaded", "📦 Games loaded: {count}").format(count=count))
 
     def get_game_mapping(self):
         return self.games_config

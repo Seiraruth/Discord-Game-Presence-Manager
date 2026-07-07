@@ -109,18 +109,18 @@ def set_autostart_windows(enable: bool):
     startup_folder = winshell.startup()
     shortcut_path = os.path.join(startup_folder, f"{app_name}.lnk")
     
-    # El ejecutable real si está empaquetado; si no, el sys.executable y el script
+    # The actual executable if packaged; otherwise sys.executable and the script
     if getattr(sys, 'frozen', False):
         target_path = sys.executable
         arguments = "--delay 60"
     else:
-        # Modo desarrollo
+        # Development mode
         target_path = sys.executable
         script_path = str(Path(__file__).resolve().parent.parent.parent / "src" / "main.py")
         arguments = f'"{script_path}" --delay 60'
         
     try:
-        # Limpiar registro y schtasks antiguo por si acaso
+        # Clean up old registry and schtasks just in case
         try:
             import winreg
             key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\CurrentVersion\Run", 0, winreg.KEY_SET_VALUE | winreg.KEY_READ)
@@ -135,17 +135,17 @@ def set_autostart_windows(enable: bool):
             pass
 
         if enable:
-            # Crear el acceso directo en Inicio
+            # Create shortcut in Startup
             with winshell.shortcut(shortcut_path) as shortcut:
                 shortcut.path = target_path
                 shortcut.arguments = arguments
                 shortcut.description = "Start Discord Presence Manager"
-            logger.info("✅ Acceso directo creado en shell:startup para iniciar con Windows (retraso 60s).")
+            logger.info("✅ Shortcut created in shell:startup to start with Windows (60s delay).")
         else:
-            # Eliminar el acceso directo
+            # Remove the shortcut
             if os.path.exists(shortcut_path):
                 os.remove(shortcut_path)
-            logger.info("✅ Acceso directo eliminado de shell:startup.")
+            logger.info("✅ Shortcut removed from shell:startup.")
     except Exception as e:
         logger.error(f"Error modifying Windows startup (winshell): {e}")
 
@@ -173,7 +173,7 @@ STEAM_COOKIE=''
     try:
         if not path.exists():
             path.write_text(default_env_content, encoding="utf-8")
-            logger.info(f"✅ .env creado en: {path}")
+            logger.info(f"✅ .env created at: {path}")
     except PermissionError:
         if IS_WINDOWS:
             appdata = Path(os.getenv("APPDATA", Path.home() / "AppData" / "Roaming"))
@@ -187,14 +187,14 @@ STEAM_COOKIE=''
         alt = appdir / ".env"
         if not alt.exists():
             alt.write_text(default_env_content, encoding="utf-8")
-            logger.info(f"⚠️ No se pudo crear .env junto al exe; creado en: {alt}")
+            logger.info(f"⚠️ Could not create .env next to exe; created at: {alt}")
         return alt
     return path
 
 def ensure_driver_executable(src_path: Path) -> str:
     try:
         if not src_path.exists():
-            logger.warning(f"Driver no encontrado en recursos: {src_path}")
+            logger.warning(f"Driver not found in resources: {src_path}")
             return str(src_path) 
         tmpdir = Path(tempfile.gettempdir()) / "discord_presence_driver"
         tmpdir.mkdir(parents=True, exist_ok=True)
@@ -217,11 +217,11 @@ def acquire_lock() -> bool:
             if psutil.pid_exists(pid):
                 logger.warning(f"⚠️ Another instance already exists (PID {pid}). Restarting...")
                 try:
-                    # Cierra la instancia anterior (si es posible)
+                    # Close the previous instance (if possible)
                     p = psutil.Process(pid)
                     p.terminate()
                     p.wait(5)
-                    logger.info("✅ Instancia anterior finalizada correctamente.")
+                    logger.info("✅ Previous instance terminated correctly.")
                 except Exception as e:
                     logger.error(f"Could not close previous instance: {e}")
                 
@@ -272,9 +272,9 @@ def save_cookie_to_env(cookie_value: str, env_path: Path):
     try:
         if env_path.exists():
             set_key(str(env_path), "STEAM_COOKIE", cookie_value)
-            logger.info("💾 Cookie guardada en .env correctamente.")
+            logger.info("💾 Cookie saved to .env successfully.")
         else:
-            logger.warning("⚠️ No se encontró el archivo .env para guardar la cookie.")
+            logger.warning("⚠️ .env file not found for saving the cookie.")
     except Exception as e:
         logger.error(f"❌ Error saving cookie in .env: {e}")
 

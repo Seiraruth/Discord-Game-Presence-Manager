@@ -85,24 +85,24 @@ class SystemTrayIcon(QSystemTrayIcon):
             cp_action.triggered.connect(self.open_custom_presence_dialog)
             self.menu.addAction(cp_action)
 
-        # Configuration Submenú
+        # Configuration Submenu
         config_menu = self.menu.addMenu(TEXTS.get("tray_config", "Configuration"))
         
-        # 1. Iniciar con Windows
-        start_win_action = QAction(TEXTS.get("config_start_windows", "Iniciar con Windows"), self.menu, checkable=True)
+        # 1. Start with Windows
+        start_win_action = QAction(TEXTS.get("config_start_windows", "Start with Windows"), self.menu, checkable=True)
         start_win_action.setChecked(self.config_manager.get_setting("start_with_windows", False))
         start_win_action.triggered.connect(self.toggle_start_windows)
         config_menu.addAction(start_win_action)
 
 
-        # 3. Iniciar Discord
-        start_discord_action = QAction(TEXTS.get("config_start_discord", "Iniciar Discord con la aplicación"), self.menu, checkable=True)
+        # 3. Start Discord
+        start_discord_action = QAction(TEXTS.get("config_start_discord", "Start Discord on launch"), self.menu, checkable=True)
         start_discord_action.setChecked(self.config_manager.get_setting("start_discord_on_launch", False))
         start_discord_action.triggered.connect(lambda chk: self.config_manager.set_setting("start_discord_on_launch", chk))
         config_menu.addAction(start_discord_action)
 
-        # 4. Obtener cookie al iniciar
-        start_cookie_action = QAction(TEXTS.get("config_get_cookie", "Obtener cookie al iniciar la aplicación"), self.menu, checkable=True)
+        # 4. Get cookie on launch
+        start_cookie_action = QAction(TEXTS.get("config_get_cookie", "Get cookie on app launch"), self.menu, checkable=True)
         start_cookie_action.setChecked(self.config_manager.get_setting("get_cookie_on_launch", True))
         start_cookie_action.triggered.connect(lambda chk: self.config_manager.set_setting("get_cookie_on_launch", chk))
         config_menu.addAction(start_cookie_action)
@@ -281,7 +281,7 @@ class SystemTrayIcon(QSystemTrayIcon):
         if not options:
             status = self.pm.check_discord_cache_status()
             if status["status"] == "MISSING" or status["hours"] > 168:
-                self.showMessage("Searching...", f"No encontrado en caché (antigua/faltante). Downloading recent Discord data for '{game_name}'...", QSystemTrayIcon.Information, 4000)
+                self.showMessage("Searching...", f"Not found in cache (old/missing). Downloading recent Discord data for '{game_name}'...", QSystemTrayIcon.Information, 4000)
                 QApplication.processEvents() # Keep UI responsive (mostly)
                 
                 # Update cache
@@ -300,7 +300,7 @@ class SystemTrayIcon(QSystemTrayIcon):
         # Note: We don't apply automatically here loop; we show selection dialog
 
         if not options:
-            self.showMessage("Info", "Sin coincidencias en JSON ni Discord (incluso tras actualizar).", QSystemTrayIcon.Information, 3000)
+            self.showMessage("Info", "No matches found in JSON or Discord (even after update).", QSystemTrayIcon.Information, 3000)
             return
 
         # Show selection dialog
@@ -425,10 +425,10 @@ class SystemTrayIcon(QSystemTrayIcon):
             self._download_progress_dlg = QProgressDialog("Downloading game list...", "Cancel", 0, total if total > 0 else 0, None)
             self._download_progress_dlg.setStyleSheet(GAMING_STYLESHEET)
             self._download_progress_dlg.setWindowModality(Qt.WindowModal)
-            self._download_progress_dlg.setMinimumDuration(1500) # Solo mostrar si la descarga toma mas de 1.5s
+            self._download_progress_dlg.setMinimumDuration(1500) # Only show if download takes more than 1.5s
             self._download_progress_dlg.setAutoReset(False)
             self._download_progress_dlg.setAutoClose(False)
-            # No forzamos show() para evitar ventanas blancas parpadeantes en descargas rípidas
+            # Do not force show() to avoid flickering white windows on fast downloads
             
         if getattr(self, '_download_progress_dlg', None):
             if total > 0:
@@ -455,8 +455,8 @@ class SystemTrayIcon(QSystemTrayIcon):
         
         if status["status"] == "FRESH":
             hours = status["hours"]
-            msg = f"El archivo de caché se actualizó hace {hours:.1f} horas.\n¿Desea actualizarlo nuevamente?"
-            if GamingMessageBox.show_question(None, "Sincronizar Juegos", msg):
+            msg = f"Cache file was updated {hours:.1f} hours ago.\nDo you want to update it again?"
+            if GamingMessageBox.show_question(None, "Sync Games", msg):
                 force = True
             # If No, we proceed with force=False (just local matching)
         

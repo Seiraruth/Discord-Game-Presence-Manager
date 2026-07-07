@@ -18,7 +18,7 @@ class AppMonitor:
             if name.lower() in (proc.info['name'] or "").lower():
                 try:
                     proc.kill()
-                    logger.info(TEXTS.get("kill_process", "💀 Proceso {name} cerrado."))
+                    logger.info(TEXTS.get("kill_process", "💀 Process {name} closed."))
                 except psutil.NoSuchProcess:
                     pass
                 except Exception as e:

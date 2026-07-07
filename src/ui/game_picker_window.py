@@ -80,14 +80,15 @@ class DiscordCacheJob(QRunnable):
         self.signals.done.emit(apps or [])
 
 class WorkerSignals(QObject):
-    done = pyqtSignal(dict, object)
+    done = pyqtSignal(object, object, tuple)
 
 class ArtJob(QRunnable):
-    def __init__(self, resolver, game, signals):
+    def __init__(self, resolver, game, signals, key):
         super().__init__()
         self.resolver = resolver
         self.game = game
         self.signals = signals
+        self.key = key
     def run(self):
         path = self.resolver.resolve(self.game)
         qimage = None
@@ -103,7 +104,7 @@ class ArtJob(QRunnable):
             game_name = self.game.get("name", "Unknown Game") if isinstance(self.game, dict) else getattr(self.game, "name", "Unknown Game")
             qimage = get_placeholder_cover(game_name)
             
-        self.signals.done.emit(self.game, qimage)
+        self.signals.done.emit(self.game, qimage, self.key)
 
 def get_placeholder_cover(game_name):
     target = QImage(160, 220, QImage.Format_ARGB32_Premultiplied)
@@ -286,6 +287,10 @@ class GamePickerWindow(QDialog):
         self.status = QLabel("Loading games...")
         self.status.setObjectName("statusLabel")
         lay.addWidget(self.status)
+
+        self.art_signals = WorkerSignals(self)
+        self.art_signals.done.connect(lambda game, qimage, key: self._set_cover_by_key(qimage, game, key))
+
         self.results_status = QLabel("Showing 0 of 0")
         self.results_status.setObjectName("resultsStatusLabel")
         lay.addWidget(self.results_status)
@@ -386,9 +391,10 @@ class GamePickerWindow(QDialog):
     def load_discord_cache_async(self):
         if self._discord_entries_loaded:
             return
-        signals = DiscordCacheSignals()
-        signals.done.connect(self._on_discord_cache_loaded)
-        self.thread_pool.start(DiscordCacheJob(self.pm, False, signals))
+        if not hasattr(self, "_discord_cache_signals"):
+            self._discord_cache_signals = DiscordCacheSignals(self)
+            self._discord_cache_signals.done.connect(self._on_discord_cache_loaded)
+        self.thread_pool.start(DiscordCacheJob(self.pm, False, self._discord_cache_signals))
 
     def _on_discord_cache_loaded(self, apps):
         t0 = time.perf_counter()
@@ -566,9 +572,7 @@ class GamePickerWindow(QDialog):
         if key in self._in_flight_art:
             return
         self._in_flight_art.add(key)
-        signals = WorkerSignals()
-        signals.done.connect(lambda game, qimage, k=key: self._set_cover_by_key(qimage, game, k))
-        self.thread_pool.start(ArtJob(self.resolver, entry.__dict__, signals))
+        self.thread_pool.start(ArtJob(self.resolver, entry.__dict__, self.art_signals, key))
 
     def _find_item_by_cover_key(self, key):
         for i in range(self.list.count()):

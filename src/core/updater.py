@@ -165,7 +165,7 @@ class UpdateWorker(QThread):
             latest_version = parse_version(latest_version_str)
             current_version = parse_version(VERSION)
             
-            logger.info(f"📦 Version actual: {VERSION}, Última versión GitHub: {latest_version_str}")
+            logger.info(f"📦 Current version: {VERSION}, Latest GitHub version: {latest_version_str}")
 
             if latest_version > current_version:
                 # Find .exe asset
@@ -178,7 +178,7 @@ class UpdateWorker(QThread):
                 if exe_url:
                     self.check_finished.emit(True, latest_version_str, exe_url, data.get("body", ""))
                 else:
-                    logger.warning("Nueva versión encontrada pero no se encontró el archivo .exe.")
+                    logger.warning("New version found but .exe file was not found.")
                     self.check_finished.emit(False, "", "", "")
             else:
                 self.check_finished.emit(False, "", "", "")

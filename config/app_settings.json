@@ -12,6 +12,8 @@
     "steamgriddb_api_key": "",
     "game_art_cache_days": 30,
     "recent_forced_games": [
+        "Wuthering Waves",
+        "Far Cry 5",
         "Persona 5 Royal"
     ],
     "game_picker_max_visible_results": 120,

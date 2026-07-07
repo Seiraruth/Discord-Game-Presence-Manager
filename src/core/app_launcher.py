@@ -30,11 +30,11 @@ class AppLauncher:
         for proc in psutil.process_iter(attrs=['name']):
             name = (proc.info.get('name') or "").lower()
             if "discord" in name and "update" not in name:
-                logger.info(TEXTS.get("already_running_discord", "💡 Discord ya está en ejecución"))
+                logger.info(TEXTS.get("already_running_discord", "💡 Discord is already running"))
                 return
         updater = AppLauncher.find_discord()
         if updater:
             logger.info(TEXTS.get("launching_discord", "🚀 Starting Discord..."))
             subprocess.Popen([updater, "--processStart", "Discord.exe"])
         else:
-            logger.warning("⚠️ No se encontró Discord instalado en la ruta por defecto.")
+            logger.warning("⚠️ Discord not found installed at default path.")
