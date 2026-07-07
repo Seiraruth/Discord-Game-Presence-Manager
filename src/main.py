@@ -4,6 +4,10 @@ import logging
 import signal
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
+
+# Ensure the project root is in sys.path when running `python src/main.py` directly
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 from dotenv import load_dotenv
 
 from PyQt5.QtWidgets import QApplication
@@ -53,7 +57,7 @@ class CookieFetchJob(QRunnable):
         self.presence_manager = presence_manager
 
     def run(self):
-        logger.info("Intentando obtener cookie de Steam al inicio (según configuración)...")
+        logger.info("Attempting to get Steam cookie on startup (per config)...")
         cookie = self.cookie_manager.get_steam_cookie(confirm_callback=None)
         if cookie:
             self.presence_manager.update_cookie(cookie)
@@ -67,20 +71,20 @@ def main():
     args, unknown = parser.parse_known_args()
     
     if args.delay > 0:
-        logger.info(f"Esperando {args.delay} segundos antes de iniciar...")
+        logger.info(f"Waiting {args.delay} seconds before starting...")
         time.sleep(args.delay)
 
     # 1. Ensure .env and load it
     actual_env_path = ensure_env_file(ENV_PATH)
     try:
         load_dotenv(actual_env_path)
-        logger.debug(".env cargado")
+        logger.debug(".env loaded")
     except Exception:
-        logger.debug("python-dotenv no disponible o .env no encontrado")
+        logger.debug("python-dotenv not available or .env not found")
 
     # 2. Acquire Lock
     if not acquire_lock():
-        logger.warning("Otra instancia ya está corriendo. Saliendo.")
+        logger.warning("Another instance is already running. Exiting.")
         sys.exit(0)
 
     # 3. Load Locale
@@ -120,12 +124,12 @@ def main():
             app_name = "DiscordPresenceManager"
             shortcut_path = os.path.join(winshell.startup(), f"{app_name}.lnk")
             if not os.path.exists(shortcut_path):
-                logger.info("Creando acceso directo de inicio de Windows faltante...")
+                logger.info("Creating missing Windows startup shortcut...")
                 set_autostart_windows(True)
         except ImportError:
-            logger.debug("winshell no disponible para comprobar acceso directo.")
+            logger.debug("winshell not available to check shortcut.")
         except Exception as e:
-            logger.error(f"Error comprobando acceso directo de inicio de Windows: {e}")
+            logger.error(f"Error checking Windows startup shortcut: {e}")
 
     # 5.1 Launch Apps
     if config_manager.get_setting("start_discord_on_launch", False):
@@ -160,7 +164,7 @@ def main():
     )
 
     # Cleanup residues from previous sessions
-    logger.info(" 🧹 Limpiando residuos de sesiones anteriores...")
+    logger.info(" 🧹 Cleaning up residues from previous sessions...")
     presence_manager.close_fake_executable()
 
     # 7. Initialize UI

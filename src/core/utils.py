@@ -102,7 +102,7 @@ def set_autostart_windows(enable: bool):
     try:
         import winshell
     except ImportError:
-        logger.error("winshell no está instalado o falló su importación.")
+        logger.error("winshell is not installed or failed to import.")
         return
 
     app_name = "DiscordPresenceManager"
@@ -147,7 +147,7 @@ def set_autostart_windows(enable: bool):
                 os.remove(shortcut_path)
             logger.info("✅ Acceso directo eliminado de shell:startup.")
     except Exception as e:
-        logger.error(f"Error modificando inicio de Windows (winshell): {e}")
+        logger.error(f"Error modifying Windows startup (winshell): {e}")
 
 def load_locale(lang: str = "en") -> dict:
     path = LANG_DIR / f"{lang}.json"
@@ -206,7 +206,7 @@ def ensure_driver_executable(src_path: Path) -> str:
             pass
         return str(dest)
     except Exception as e:
-        logger.error(f"Error preparando driver: {e}")
+        logger.error(f"Error preparing driver: {e}")
         return str(src_path)
 
 def acquire_lock() -> bool:
@@ -223,7 +223,7 @@ def acquire_lock() -> bool:
                     p.wait(5)
                     logger.info("✅ Instancia anterior finalizada correctamente.")
                 except Exception as e:
-                    logger.error(f"No se pudo cerrar la instancia anterior: {e}")
+                    logger.error(f"Could not close previous instance: {e}")
                 
                 # We don't restart here, we just return False or let the caller handle it.
                 # The original code restarted the process.
@@ -265,7 +265,7 @@ def safe_json_load(path: Path) -> Optional[Dict]:
         with path.open("r", encoding="utf-8") as f:
             return json.load(f)
     except Exception as e:
-        logger.error(f"Error cargando JSON {path}: {e}")
+        logger.error(f"Error loading JSON {path}: {e}")
         return None
 
 def save_cookie_to_env(cookie_value: str, env_path: Path):
@@ -276,14 +276,14 @@ def save_cookie_to_env(cookie_value: str, env_path: Path):
         else:
             logger.warning("⚠️ No se encontró el archivo .env para guardar la cookie.")
     except Exception as e:
-        logger.error(f"❌ Error guardando cookie en .env: {e}")
+        logger.error(f"❌ Error saving cookie in .env: {e}")
 
 def save_json(obj, path: Path):
     try:
         with path.open("w", encoding="utf-8") as f:
             json.dump(obj, f, indent=4, ensure_ascii=False)
     except Exception as e:
-        logger.error(f"Error guardando JSON {path}: {e}")
+        logger.error(f"Error saving JSON {path}: {e}")
 
 def calculate_file_hash(path: Path, algorithm: str = "sha256") -> Optional[str]:
     try:
@@ -293,5 +293,5 @@ def calculate_file_hash(path: Path, algorithm: str = "sha256") -> Optional[str]:
                 hash_func.update(chunk)
         return hash_func.hexdigest()
     except Exception as e:
-        logger.error(f"Error calculando hash de {path}: {e}")
+        logger.error(f"Error calculating hash of {path}: {e}")
         return None

@@ -481,7 +481,7 @@ class QuestListDialog(QDialog):
             else:
                 mins = int(remaining // 60)
                 secs = int(remaining % 60)
-                status_text = f"⏱️ Tiempo restante: {mins:02d}:{secs:02d}"
+                status_text = f"⏱️ Time remaining: {mins:02d}:{secs:02d}"
                 
             status_lbl = QLabel(status_text)
             status_lbl.setStyleSheet("color: #dcddde; font-size: 13px; font-weight: 500; padding-top: 2px;")
@@ -685,7 +685,7 @@ class CustomPresenceDialog(QDialog):
         self.save_btn = QPushButton("Guardar")
         self.save_btn.clicked.connect(self.on_save)
         
-        self.cancel_btn = QPushButton("Cancelar")
+        self.cancel_btn = QPushButton("Cancel")
         self.cancel_btn.setObjectName("secondary")
         self.cancel_btn.clicked.connect(self.reject)
         

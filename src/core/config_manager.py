@@ -35,17 +35,11 @@ class ConfigManager:
             "game_art_cache_days": 30,
             "recent_forced_games": [],
             "game_picker_max_visible_results": 120,
-            "game_picker_search_limit": 50,
-            "game_picker_empty_limit": 24,
-            "game_art_initial_batch_size": 4,
-            "game_art_batch_size": 2,
-            "load_discord_cache_on_startup": False
             "game_picker_search_limit": 60,
             "game_picker_empty_limit": 40,
             "game_art_initial_batch_size": 8,
             "game_art_batch_size": 4,
-            "load_discord_cache_on_startup": False,
-            "game_picker_max_visible_results": 120
+            "load_discord_cache_on_startup": False
         }
         self.app_settings_path = CONFIG_DIR / "app_settings.json"
         self._load()

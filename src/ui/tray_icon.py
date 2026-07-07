@@ -85,8 +85,8 @@ class SystemTrayIcon(QSystemTrayIcon):
             cp_action.triggered.connect(self.open_custom_presence_dialog)
             self.menu.addAction(cp_action)
 
-        # Configuración Submenú
-        config_menu = self.menu.addMenu(TEXTS.get("tray_config", "Configuración"))
+        # Configuration Submenú
+        config_menu = self.menu.addMenu(TEXTS.get("tray_config", "Configuration"))
         
         # 1. Iniciar con Windows
         start_win_action = QAction(TEXTS.get("config_start_windows", "Iniciar con Windows"), self.menu, checkable=True)
@@ -223,7 +223,7 @@ class SystemTrayIcon(QSystemTrayIcon):
         if not options:
             status = self.pm.check_discord_cache_status()
             if status["status"] == "MISSING" or status["hours"] > 168:
-                self.showMessage("Buscando...", f"No encontrado en caché (antigua/faltante). Descargando datos recientes para '{game_name}'...", QSystemTrayIcon.Information, 4000)
+                self.showMessage("Searching...", f"Not found in cache (old/missing). Downloading recent data for '{game_name}'...", QSystemTrayIcon.Information, 4000)
                 QApplication.processEvents() 
                 apps = self.pm._fetch_discord_apps_cached(force_download=True)
                 
@@ -237,7 +237,7 @@ class SystemTrayIcon(QSystemTrayIcon):
                 options = options[:50]
         
         if not options:
-            self.showMessage("Info", "Sin coincidencias encontradas.", QSystemTrayIcon.Information, 3000)
+            self.showMessage("Info", "No matches found.", QSystemTrayIcon.Information, 3000)
             return False
 
         # Show selection dialog
@@ -281,7 +281,7 @@ class SystemTrayIcon(QSystemTrayIcon):
         if not options:
             status = self.pm.check_discord_cache_status()
             if status["status"] == "MISSING" or status["hours"] > 168:
-                self.showMessage("Buscando...", f"No encontrado en caché (antigua/faltante). Descargando datos recientes de Discord para '{game_name}'...", QSystemTrayIcon.Information, 4000)
+                self.showMessage("Searching...", f"No encontrado en caché (antigua/faltante). Downloading recent Discord data for '{game_name}'...", QSystemTrayIcon.Information, 4000)
                 QApplication.processEvents() # Keep UI responsive (mostly)
                 
                 # Update cache
@@ -304,7 +304,7 @@ class SystemTrayIcon(QSystemTrayIcon):
             return
 
         # Show selection dialog
-        sel_dialog = MatchSelectionDialog("Seleccionar juego", options)
+        sel_dialog = MatchSelectionDialog("Select Game", options)
         if sel_dialog.exec_() == QDialog.Accepted and sel_dialog.selected_match:
             match = sel_dialog.selected_match
             self.apply_force_game(match)
@@ -327,16 +327,16 @@ class SystemTrayIcon(QSystemTrayIcon):
                 
                 self.pm.client_id = cid
                 self.pm._connect_rpc(cid)
-                logger.info(f"🔁 RPC reconectado con client_id forzado: {cid}")
+                logger.info(f"🔁 RPC reconnected with forced client_id: {cid}")
             except Exception as e:
-                logger.error(f"❌ Error reconectando RPC tras forzar juego: {e}")
+                logger.error(f"❌ Error reconnecting RPC after forcing game: {e}")
                 threading.Thread(target=reconnect_after_delay, daemon=True).start()
 
         if exe:
             try:
                 self.pm.close_fake_executable()
             except Exception as e:
-                logger.debug(f"No se pudo cerrar ejecutable previo: {e}")
+                logger.debug(f"Could not close previous executable: {e}")
             self.pm.launch_fake_executable(exe)
 
         self.pm.forced_game = {
@@ -345,7 +345,7 @@ class SystemTrayIcon(QSystemTrayIcon):
             "executable_path": exe
         }
         self.pm.last_game = dict(self.pm.forced_game)
-        logger.info(f"🎮 Juego forzado activado: {name} (id={cid})")
+        logger.info(f"🎮 Forced game activated: {name} (id={cid})")
         
         self.showMessage("OK", f"{TEXTS.get('tray_forced_game', 'Forced game')}: {name}", QSystemTrayIcon.Information, 3000)
         self.update_menu()
@@ -422,7 +422,7 @@ class SystemTrayIcon(QSystemTrayIcon):
             return
 
         if not getattr(self, '_download_progress_dlg', None):
-            self._download_progress_dlg = QProgressDialog("Descargando lista de juegos...", "Cancelar", 0, total if total > 0 else 0, None)
+            self._download_progress_dlg = QProgressDialog("Downloading game list...", "Cancel", 0, total if total > 0 else 0, None)
             self._download_progress_dlg.setStyleSheet(GAMING_STYLESHEET)
             self._download_progress_dlg.setWindowModality(Qt.WindowModal)
             self._download_progress_dlg.setMinimumDuration(1500) # Solo mostrar si la descarga toma mas de 1.5s
@@ -440,7 +440,7 @@ class SystemTrayIcon(QSystemTrayIcon):
                     return f"{sz / 1024:.1f} KB"
                 return f"{sz / 1024 / 1024:.2f} MB"
                 
-            msg = f"Descargando lista de juegos... ({fmt(current)} / {fmt(total)})" if total > 0 else f"Descargando lista de juegos... ({fmt(current)})"
+            msg = f"Downloading game list... ({fmt(current)} / {fmt(total)})" if total > 0 else f"Downloading game list... ({fmt(current)})"
             self._download_progress_dlg.setLabelText(msg)
             QApplication.processEvents()
             
@@ -461,7 +461,7 @@ class SystemTrayIcon(QSystemTrayIcon):
             # If No, we proceed with force=False (just local matching)
         
         # Create Progress Dialog
-        self.progress = QProgressDialog("Sincronizando juegos...", "Cancelar", 0, 100, None)
+        self.progress = QProgressDialog("Syncing games...", "Cancel", 0, 100, None)
         self.progress.setStyleSheet(GAMING_STYLESHEET)
         self.progress.setWindowModality(Qt.WindowModal)
         self.progress.setMinimumDuration(0)
@@ -485,27 +485,27 @@ class SystemTrayIcon(QSystemTrayIcon):
         threading.Thread(target=self.pm.sync_missing_game_details, args=(force,), daemon=True).start()
 
     def on_sync_canceled(self):
-        logger.info("Solicitando cancelación de sincronización...")
+        logger.info("Requesting sync cancellation...")
         self.pm.cancel_sync()
 
     def on_sync_progress(self, current, total, updated, eta_str):
         if getattr(self, 'progress', None):
             self.progress.setMaximum(total)
             self.progress.setValue(current)
-            self.progress.setLabelText(f"Sincronizando juegos...\nRevisados: {current}/{total} - Nuevos/Actualizados: {updated}\nTiempo restante: {eta_str}")
+            self.progress.setLabelText(f"Syncing games...\nChecked: {current}/{total} - New/Updated: {updated}\nTime remaining: {eta_str}")
 
     def on_sync_finished(self, updated, total):
         if getattr(self, 'progress', None):
             self.progress.close()
             self.progress = None
         
-        GamingMessageBox.show_info(None, "Sincronización Completada", f"Se han actualizado {updated} juegos de un total de {total} procesados.")
+        GamingMessageBox.show_info(None, "Sync Completed", f"Updated {updated} games out of a total of {total} processed.")
         
     def on_sync_error(self, error_msg):
         if getattr(self, 'progress', None):
             self.progress.close()
             self.progress = None
-        GamingMessageBox.show_warning(None, "Error de Sincronización", f"Ocurrió un error: {error_msg}")
+        GamingMessageBox.show_warning(None, "Sync Error", f"An error occurred: {error_msg}")
     def exit_app(self):
         try:
             if self.game_picker_window is not None:

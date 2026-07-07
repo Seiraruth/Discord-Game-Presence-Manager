@@ -23,28 +23,36 @@ Discord Presence Manager is a highly polished, modern desktop tray app that lets
 - Discord desktop app running locally
 - Windows is the primary supported platform (some code paths exist for macOS/Linux)
 
-## Run from source
+## How to Run
 
-This project uses modern Python tooling. Dependencies are managed via `pyproject.toml` (we recommend using [uv](https://github.com/astral-sh/uv)).
+There are two ways to run this project: using **uv** (recommended for speed and modern tooling) or standard **pip**.
 
-1. Clone this repository.
-2. Install dependencies using `uv` (or pip):
+### Option A: Using `uv` (Recommended)
+If you have [uv](https://github.com/astral-sh/uv) installed, running the app is completely automated:
 
-   ```bash
-   uv sync
-   # OR if you're using pip:
-   # pip install .
-   ```
+```bash
+# 1. Install dependencies and create virtual environment automatically
+uv sync
 
-3. (Optional) Create `.env` in the repository root (or let the app create a template).  
-   The app already ships with a default Discord Application Client ID, so `.env` is not required to start.
-4. Start the app:
+# 2. Run the application
+uv run python src/main.py
+```
 
-   ```bash
-   uv run python src/main.py
-   # OR
-   # python src/main.py
-   ```
+### Option B: Using Standard Python (`pip`)
+If you prefer standard python, you can install the dependencies manually:
+
+```bash
+# 1. Create a virtual environment (optional but recommended)
+python -m venv venv
+venv\Scripts\activate  # On Windows
+# source venv/bin/activate  # On macOS/Linux
+
+# 2. Install dependencies
+pip install .
+
+# 3. Run the application
+python src/main.py
+```
 
 ## `.env` / `CLIENT_ID` configuration
 
