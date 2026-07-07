@@ -7,6 +7,8 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from PyQt5.QtWidgets import QApplication
+from PyQt5.QtCore import QRunnable, QThreadPool
+from PyQt5.QtGui import QFont
 
 from src.core.utils import (
     BASE_DIR, CONFIG_DIR, LOGS_DIR, LANG_DIR, ASSETS_DIR, LOG_FILE, ENV_PATH,
@@ -44,6 +46,18 @@ logger.debug(f"Base directory: {BASE_DIR}")
 logger.debug(f"Config directory: {CONFIG_DIR}")
 logger.debug(f"Logs directory: {LOGS_DIR}")
 
+class CookieFetchJob(QRunnable):
+    def __init__(self, cookie_manager, presence_manager):
+        super().__init__()
+        self.cookie_manager = cookie_manager
+        self.presence_manager = presence_manager
+
+    def run(self):
+        logger.info("Intentando obtener cookie de Steam al inicio (según configuración)...")
+        cookie = self.cookie_manager.get_steam_cookie(confirm_callback=None)
+        if cookie:
+            self.presence_manager.update_cookie(cookie)
+
 def main():
     import argparse
     import time
@@ -80,6 +94,18 @@ def main():
     # 4. Initialize PyQt Application
     app = QApplication(sys.argv)
     app.setQuitOnLastWindowClosed(False) # Important for tray apps
+    
+    # 4.1 Apply global typography and styles
+    default_font = QFont("Segoe UI", 10)
+    default_font.setStyleHint(QFont.SansSerif)
+    app.setFont(default_font)
+    
+    style_path = BASE_DIR / "src" / "ui" / "style.qss"
+    if style_path.exists():
+        with open(style_path, "r", encoding="utf-8") as f:
+            app.setStyleSheet(f.read())
+    else:
+        logger.warning(f"Stylesheet not found at {style_path}")
 
     # 5. Check for Updates
     updater = Updater()
@@ -133,13 +159,6 @@ def main():
         clear_presence_when_idle=config_manager.get_setting("clear_presence_when_idle", True)
     )
 
-    # 6.1 Optional Cookie Fetch
-    if config_manager.get_setting("get_cookie_on_launch", True):
-        logger.info("Intentando obtener cookie de Steam al inicio (según configuración)...")
-        cookie = cookie_manager.get_steam_cookie(confirm_callback=None)
-        if cookie:
-            presence_manager.update_cookie(cookie)
-
     # Cleanup residues from previous sessions
     logger.info(" 🧹 Limpiando residuos de sesiones anteriores...")
     presence_manager.close_fake_executable()
@@ -147,6 +166,10 @@ def main():
     # 7. Initialize UI
     tray_icon = SystemTrayIcon(presence_manager, texts, config_manager)
     tray_icon.show()
+
+    # 6.1 Optional Cookie Fetch (Moved here to not block UI)
+    if config_manager.get_setting("get_cookie_on_launch", True):
+        QThreadPool.globalInstance().start(CookieFetchJob(cookie_manager, presence_manager))
 
     if config_manager.get_setting("open_game_picker_on_startup", True):
         tray_icon.open_game_picker()

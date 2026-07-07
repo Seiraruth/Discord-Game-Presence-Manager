@@ -38,34 +38,6 @@ class SystemTrayIcon(QSystemTrayIcon):
         self.setToolTip("Discord Presence Manager")
         
         self.menu = QMenu(parent)
-        
-        # Apply dark theme / advanced visual stylesheet
-        self.menu.setStyleSheet("""
-            QMenu {
-                background-color: #1e1f22; /* Discord-like dark background */
-                color: #dcddde;            /* Light gray text */
-                border: 1px solid #111111;
-                border-radius: 8px;
-                padding: 5px;
-            }
-            QMenu::item {
-                background-color: transparent;
-                padding: 8px 24px 8px 12px;
-                border-radius: 4px;
-                margin: 2px 4px;
-            }
-            QMenu::item:selected {
-                background-color: #045D0E; /* Discord Blurple */
-                color: white;
-            }
-            QMenu::separator {
-                height: 1px;
-                background: #3f4145;
-                margin: 6px 8px;
-            }
-        """)
-
-        
         self.game_picker_window = None
         self.create_menu()
         self.setContextMenu(self.menu)

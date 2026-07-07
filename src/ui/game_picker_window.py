@@ -1,15 +1,15 @@
-import difflib
 import logging
 import time
 from dataclasses import dataclass
 from typing import Dict, List, Tuple
 
-from PyQt5.QtCore import Qt, QTimer, QSize, QRunnable, QThreadPool, pyqtSignal, QObject
-from PyQt5.QtGui import QPixmap, QPainter, QColor
+from PyQt5.QtCore import Qt, QTimer, QSize, QRunnable, QThreadPool, pyqtSignal, QObject, QPropertyAnimation, QEasingCurve
+from PyQt5.QtGui import QPixmap, QPainter, QColor, QImage, QIcon
 from PyQt5.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QListWidget, QListWidgetItem,
-    QPushButton, QMessageBox
+    QPushButton, QMessageBox, QGraphicsDropShadowEffect
 )
+from rapidfuzz import fuzz
 
 from src.core.game_art_resolver import GameArtResolver
 
@@ -23,6 +23,19 @@ class GameEntry:
     steam_appid: str = ""
     source: str = "Local"
 
+class DiscordCacheSignals(QObject):
+    done = pyqtSignal(list)
+
+class DiscordCacheJob(QRunnable):
+    def __init__(self, pm, force_download, signals):
+        super().__init__()
+        self.pm = pm
+        self.force_download = force_download
+        self.signals = signals
+    def run(self):
+        apps = self.pm._fetch_discord_apps_cached(force_download=self.force_download)
+        self.signals.done.emit(apps or [])
+
 class WorkerSignals(QObject):
     done = pyqtSignal(dict, object)
 
@@ -34,7 +47,14 @@ class ArtJob(QRunnable):
         self.signals = signals
     def run(self):
         path = self.resolver.resolve(self.game)
-        self.signals.done.emit(self.game, path)
+        qimage = None
+        if path:
+            qimage = QImage(str(path))
+            if not qimage.isNull():
+                qimage = qimage.scaled(160, 220, Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation)
+            else:
+                qimage = None
+        self.signals.done.emit(self.game, qimage)
 
 class GamePickerWindow(QDialog):
     def __init__(self, pm, config_manager, tray_icon=None, parent=None):
@@ -78,27 +98,42 @@ class GamePickerWindow(QDialog):
 
         self.setWindowTitle("Force Game")
         self.resize(980, 700)
-        self.setStyleSheet(
-            "QDialog{background:#1e1f22;color:#f2f3f5;}"
-            "QLabel{color:#e5e8ec;}"
-            "QLineEdit{background:#2b2d31;color:#ffffff;padding:8px;border:1px solid #4f545c;selection-background-color:#5865f2;}"
-            "QListWidget{background:#1e1f22;border:1px solid #3b3f45;color:#f2f3f5;}"
-            "QListWidget::item{color:#f2f3f5;border:1px solid #2a2d31;padding:4px;}"
-            "QListWidget::item:selected{background:#2f365f;border:1px solid #5865f2;color:#ffffff;}"
-            "QPushButton{background:#2b2d31;color:#ffffff;padding:8px;border:1px solid #4f545c;}"
-            "QPushButton:hover{background:#3b3d42;}"
-        )
 
         lay = QVBoxLayout(self)
-        lay.addWidget(QLabel("<h2>Force Game</h2>"))
+        lay.setContentsMargins(24, 24, 24, 24)
+        lay.setSpacing(16)
+        
+        title_label = QLabel("Force Game")
+        title_label.setObjectName("titleLabel")
+        lay.addWidget(title_label)
+        
         self.search = QLineEdit(); self.search.setPlaceholderText("Search games...")
+        
+        # Add subtle drop shadow to search bar
+        shadow_search = QGraphicsDropShadowEffect()
+        shadow_search.setBlurRadius(20)
+        shadow_search.setYOffset(2)
+        shadow_search.setColor(QColor(0, 0, 0, 70))
+        self.search.setGraphicsEffect(shadow_search)
+        
         lay.addWidget(self.search)
+        
         self.status = QLabel("Loading games...")
+        self.status.setObjectName("statusLabel")
         lay.addWidget(self.status)
         self.results_status = QLabel("Showing 0 of 0")
+        self.results_status.setObjectName("resultsStatusLabel")
         lay.addWidget(self.results_status)
 
         self.list = QListWidget()
+        
+        # Add subtle drop shadow to list widget
+        shadow_list = QGraphicsDropShadowEffect()
+        shadow_list.setBlurRadius(20)
+        shadow_list.setYOffset(2)
+        shadow_list.setColor(QColor(0, 0, 0, 70))
+        self.list.setGraphicsEffect(shadow_list)
+        
         self.list.setViewMode(QListWidget.IconMode)
         self.list.setIconSize(QSize(160, 220))
         self.list.setResizeMode(QListWidget.Adjust)
@@ -142,6 +177,16 @@ class GamePickerWindow(QDialog):
         logger.debug("Game picker UI constructed")
         QTimer.singleShot(0, self.initial_load)
 
+    def showEvent(self, event):
+        super().showEvent(event)
+        self.setWindowOpacity(0.0)
+        self.fade_anim = QPropertyAnimation(self, b"windowOpacity")
+        self.fade_anim.setDuration(150)
+        self.fade_anim.setStartValue(0.0)
+        self.fade_anim.setEndValue(1.0)
+        self.fade_anim.setEasingCurve(QEasingCurve.OutCubic)
+        self.fade_anim.start()
+
     def _get_setting(self, key, default=None):
         try:
             if hasattr(self.config_manager, "get_setting"):
@@ -158,27 +203,18 @@ class GamePickerWindow(QDialog):
         self.status.setText("Loading games...")
         try:
             t0 = time.perf_counter()
-            self.load_games()
+            self.load_local_games()
             self._loaded = True
             logger.debug("Game picker loaded %s local games in %.2fs", len(self.entries), time.perf_counter() - t0)
             self.apply_filter()
             self.refresh_state_on_open()
             if self._load_discord_cache_on_startup:
-                QTimer.singleShot(50, self.load_discord_cache_async)
-            QTimer.singleShot(50, self.load_discord_cache_async)
+                self.load_discord_cache_async()
         except Exception:
             logger.exception("Failed to load game picker data")
             self.status.setText("Failed to load games.")
         finally:
             self._loading = False
-    def initial_load(self):
-        self.status.setText("Loading games...")
-        t0 = time.perf_counter()
-        self.load_local_games()
-        logger.debug("Game picker loaded %s local games in %.2fs", len(self.entries), time.perf_counter() - t0)
-        self.apply_filter()
-        self.refresh_state_on_open()
-        QTimer.singleShot(50, self.load_discord_cache_async)
 
     def load_local_games(self):
         self.entries = []
@@ -192,8 +228,13 @@ class GamePickerWindow(QDialog):
     def load_discord_cache_async(self):
         if self._discord_entries_loaded:
             return
+        signals = DiscordCacheSignals()
+        signals.done.connect(self._on_discord_cache_loaded)
+        self.thread_pool.start(DiscordCacheJob(self.pm, False, signals))
+
+    def _on_discord_cache_loaded(self, apps):
         t0 = time.perf_counter()
-        for d in self.pm._fetch_discord_apps_cached(force_download=False) or []:
+        for d in apps:
             name = d.get("name")
             if name and name.lower() not in self._by_name:
                 e = GameEntry(name=name, id=str(d.get("id") or ""), source="Discord")
@@ -214,7 +255,7 @@ class GamePickerWindow(QDialog):
             return 0
         short = ''.join(ch for ch in n if ch.isalnum())
         if all(ch in short for ch in ql): return 500
-        return int(difflib.SequenceMatcher(None, ql, n).ratio()*100)
+        return int(fuzz.WRatio(ql, n))
 
     # TODO: For better scalability, migrate to QListView + QAbstractListModel + custom delegate virtualization.
     def apply_filter(self):
@@ -251,18 +292,9 @@ class GamePickerWindow(QDialog):
                 matched_count += 1
                 ranked.append((score, e))
             ranked.sort(key=lambda x: x[0], reverse=True)
-        t0 = time.perf_counter()
-        ranked = []
-        matched_count = 0
-        for e in self.entries:
-            score = self._rank(e.name, q)
-            if q and score < 35:
-                continue
-            matched_count += 1
-            ranked.append((score, e))
-        ranked.sort(key=lambda x: x[0], reverse=True)
+            
         total = len(self.entries)
-        render_limit = self._search_limit if q else self._empty_limit
+        render_limit = self._max_visible_results
         self.list.clear()
         self._cover_batch_timer.stop()
         self._visible_cover_timer.stop()
@@ -285,38 +317,23 @@ class GamePickerWindow(QDialog):
                     self._pending_cover_items.append((item, e))
         finally:
             self.list.setUpdatesEnabled(True)
+            
         if q:
             self.results_status.setText(f"Showing {shown} of {matched_count} matches · Library: {total}")
         else:
             self.results_status.setText(f"Showing {shown} games · Library: {total}")
             self.status.setText(f"Type to search {total} games")
+            
         elapsed = time.perf_counter() - t0
         logger.debug("Game picker filter mode=%s query=%r limit=%s matched=%s shown=%s total=%s duration=%.3fs", mode, q, render_limit, matched_count, shown, total, elapsed)
         self._schedule_visible_cover_load(initial=True)
-        elapsed = time.perf_counter() - t0
-        logger.debug("Game picker filter query=%r matched=%s shown=%s total=%s in %.3fs", q, matched_count, shown, total, elapsed)
+        
         if self._pending_cover_items:
             initial = self._pending_cover_items[:self._cover_initial_batch_size]
             self._pending_cover_items = self._pending_cover_items[self._cover_initial_batch_size:]
             for item, e in initial:
                 self._queue_cover(item, e)
-        self._pending_cover_items = []
-        for _, e in ranked[:self._max_visible_results]:
-            item = QListWidgetItem(f"{e.name}\n{e.source}")
-            item.setData(Qt.UserRole, e)
-            key = self._entry_key(e)
-            item.setData(Qt.UserRole + 1, key)
-            self._visible_keys.add(key)
-            cached_icon = self._icon_cache.get(key)
-            item.setIcon(cached_icon if cached_icon else self._placeholder_icon(e.name))
-            self.list.addItem(item)
-            shown += 1
-            if not cached_icon:
-                self._pending_cover_items.append((item, e))
-        self.results_status.setText(f"Showing {shown} of {total}")
-        logger.debug("Game picker apply_filter done in %.2fs (shown=%s total=%s)", time.perf_counter() - t0, shown, total)
-        if self._pending_cover_items and not self._cover_batch_timer.isActive():
-            self._cover_batch_timer.start()
+                
         if self._pending_cover_items and not self._cover_batch_timer.isActive():
             self._cover_batch_timer.start()
 
@@ -324,8 +341,6 @@ class GamePickerWindow(QDialog):
         t0 = time.perf_counter()
         batch = self._pending_cover_items[:self._cover_batch_size]
         self._pending_cover_items = self._pending_cover_items[self._cover_batch_size:]
-        batch = self._pending_cover_items[:12]
-        self._pending_cover_items = self._pending_cover_items[12:]
         for item, entry in batch:
             self._queue_cover(item, entry)
         if not self._pending_cover_items:
@@ -339,15 +354,21 @@ class GamePickerWindow(QDialog):
             self._visible_cover_timer.start()
 
     def _load_visible_covers(self):
-        viewport_rect = self.list.viewport().rect().adjusted(0, -300, 0, 300)
+        viewport = self.list.viewport()
         visible_candidates = []
         queued_count = 0
-        for i in range(self.list.count()):
+        
+        first_item = self.list.itemAt(0, 0)
+        last_item = self.list.itemAt(viewport.width(), viewport.height())
+        
+        start_row = self.list.row(first_item) if first_item else 0
+        end_row = self.list.row(last_item) if last_item else self.list.count() - 1
+        if end_row < 0:
+            end_row = self.list.count() - 1
+            
+        for i in range(start_row, min(end_row + 1, self.list.count())):
             item = self.list.item(i)
             if not item:
-                continue
-            rect = self.list.visualItemRect(item)
-            if not rect.isValid() or not rect.intersects(viewport_rect):
                 continue
             key = item.data(Qt.UserRole + 1)
             entry = item.data(Qt.UserRole)
@@ -371,8 +392,6 @@ class GamePickerWindow(QDialog):
             if self._pending_cover_items and not self._cover_batch_timer.isActive():
                 self._cover_batch_timer.start()
         logger.debug("Queued %s visible cover jobs; pending=%s in_flight=%s", queued_count, len(self._pending_cover_items), len(self._in_flight_art))
-            self._cover_batch_timer.stop()
-        logger.debug("Game picker queued %s cover jobs in %.3fs", len(batch), time.perf_counter() - t0)
 
     def _placeholder_icon(self, name):
         pix = QPixmap(160, 220); pix.fill(QColor("#2b2d31"))
@@ -388,16 +407,9 @@ class GamePickerWindow(QDialog):
             return
         if key in self._in_flight_art:
             return
-            return
-            return
-        if key in self._in_flight_art:
-            return
-            return
-        if key in self._in_flight_art:
-            return
         self._in_flight_art.add(key)
         signals = WorkerSignals()
-        signals.done.connect(lambda game, path, k=key: self._set_cover_by_key(path, game, k))
+        signals.done.connect(lambda game, qimage, k=key: self._set_cover_by_key(qimage, game, k))
         self.thread_pool.start(ArtJob(self.resolver, entry.__dict__, signals))
 
     def _find_item_by_cover_key(self, key):
@@ -410,11 +422,11 @@ class GamePickerWindow(QDialog):
                 continue
         return None
 
-    def _set_cover_by_key(self, path, game, key):
+    def _set_cover_by_key(self, qimage, game, key):
         del game
         try:
             self._in_flight_art.discard(key)
-            if not path:
+            if qimage is None:
                 return
             item = self._find_item_by_cover_key(key)
             if item is None:
@@ -427,11 +439,10 @@ class GamePickerWindow(QDialog):
                 return
             icon = self._icon_cache.get(key)
             if icon is None:
-                pix = QPixmap(str(path))
+                pix = QPixmap.fromImage(qimage)
                 if pix.isNull():
                     return
-                from PyQt5.QtGui import QIcon
-                icon = QIcon(pix.scaled(160,220,Qt.KeepAspectRatioByExpanding,Qt.SmoothTransformation))
+                icon = QIcon(pix)
                 self._icon_cache[key] = icon
             item.setIcon(icon)
         except RuntimeError:

@@ -1,0 +1,13 @@
+PyQt5
+psutil
+requests
+selenium
+pypresence
+beautifulsoup4
+python-dotenv
+browser-cookie3
+rapidfuzz
+
+[:sys_platform == "win32"]
+pywin32
+winshell
